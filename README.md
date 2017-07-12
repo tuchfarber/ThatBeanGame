@@ -1,1 +1,1 @@
-# ThatBeanGame
+# Web based version of my favourite bean farming game
