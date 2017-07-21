@@ -1,6 +1,7 @@
 class Player:
-    def __init__(self, name):
+    def __init__(self, name, websocket):
         self.name = name
+        self.websocket = websocket
         self.hand = []
         self.fields = []
         self.coins = 0
