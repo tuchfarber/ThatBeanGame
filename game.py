@@ -11,7 +11,6 @@ class Game:
         self.id = str(uuid.uuid4())[:6]
 
         card.shuffle_deck(self.deck)
-        return self.id
 
 if __name__ == "__main__":
     game = Game()
