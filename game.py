@@ -39,7 +39,7 @@ class Game:
     def start_game(self, player):
         if self.status != "Awaiting":
             return {'status':'error', 'message':'Game has already started'}
-        if self.players[self.current_player_index] != player:
+        if not player.is_host:
             return {'status':'error', 'message':'Only host can start game'}
         self.deal_cards()
         self.status = "Running"

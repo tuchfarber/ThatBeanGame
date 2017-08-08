@@ -39,7 +39,7 @@ def enable_cors():
 def enable_options():
     return
 
-@app.route('/home', method='GET')
+@app.route('/', method='GET')
 def home():
     return static_file('tbg.html', './')
 

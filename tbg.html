@@ -38,20 +38,83 @@
                 
                 <div><b>Coins:</b> {{all_data.player_info.coins}}</div>
                 <div><b>Host:</b> {{all_data.player_info.is_host}}</div>
-                <div><b>Hand:</b></div>
-                <table>
-                    <tr>
-                        <th>Name</th>
-                        <th>Count</th>
-                        <th>Values</th>
-                    </tr>
-                    <tr v-for="card in all_data.player_info.hand">
-                        <td>{{card.name}}</td>
-                        <td>{{card.count}}</td>
-                        <td>{{card.values}}</td>
-                    </tr>
-                </table>
+                <div>
+                    <b>Hand:</b>
+                    <table>
+                        <tr>
+                            <th>Name</th>
+                            <th>Count</th>
+                            <th>Values</th>
+                        </tr>
+                        <tr v-for="card in all_data.player_info.hand">
+                            <td>{{card.name}}</td>
+                            <td>{{card.count}}</td>
+                            <td>{{card.values}}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div>
+                    <b>Field:</b>
+                    <table>
+                        <tr>
+                            <th>Name</th>
+                            <th>Count</th>
+                            <th>Enabled</th>
+                        </tr>
+                        <tr v-for="field in all_data.player_info.fields">
+                            <td>{{field.name}}</td>
+                            <td>{{field.count}}</td>
+                            <td>{{field.enabled}}</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
+            <h3>Other Players</h3>
+            <div v-if="all_data.players != undefined">
+                <div>
+                    <b>Players:</b>
+                    <table>
+                        <tr>
+                            <th>Name</th>
+                            <th>Hand Count</th>
+                            <th>Is Host</th>
+                            <th>Coins</th>
+                            <template v-for="index in [1,2,3]">
+                                <th>Field {{index}} Card</th>
+                                <th>Field {{index}} Count</th>
+                                <th>Field {{index}} Enabled</th>
+                            </template>
+                        </tr>
+                        <tr v-for="player in all_data.players">
+                            <td>{{player.name}}</td>
+                            <td>{{player.hand_count}}</td>
+                            <td>{{player.is_host}}</td>
+                            <td>{{player.coins}}</td>
+                            <template v-for="field in player.fields">
+                                <td>{{field.name}}</td>
+                                <td>{{field.count}}</td>
+                                <td>{{field.enabled}}</td>
+                            </template>
+                        </tr>
+                    </table>
+                </div>
+                <div>
+                    <b>Field:</b>
+                    <table>
+                        <tr>
+                            <th>Name</th>
+                            <th>Count</th>
+                            <th>Enabled</th>
+                        </tr>
+                        <tr v-for="field in all_data.player_info.fields">
+                            <td>{{field.name}}</td>
+                            <td>{{field.count}}</td>
+                            <td>{{field.enabled}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
         </div>
         <script>
             content = new Vue({
