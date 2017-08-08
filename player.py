@@ -1,7 +1,10 @@
 from card import Field
 import uuid
+
+
 class Player:
     """Represents a player in the game"""
+
     def __init__(self, name):
         self.name = name
         self.hand = []

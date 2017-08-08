@@ -1,9 +1,11 @@
 import random
 
+
 class Card:
     """Represents one card in game"""
     MAX_CARDS = 24
     MIN_CARDS = 0
+
     def __init__(self, name, count, values, img_src):
         self.name = name
         self.count = count
@@ -19,11 +21,13 @@ class Card:
             "img": self.img_src
         }
 
+
 class Deck:
     """Represents a deck in game. Can be used for draw deck or discard"""
+
     def __init__(self):
         self.cards = []
-    
+
     def build_deck(self):
         """Builds deck from standard cards"""
         card_types = (
@@ -43,7 +47,7 @@ class Deck:
             for _ in range(card_type[1]):
                 new_card = Card(*card_type)
                 self.cards.append(new_card)
-    
+
     def pop(self):
         card = self.cards[-1]
         self.cards = self.cards[:-1]
@@ -57,12 +61,14 @@ class Deck:
         """Returns number of cards in deck"""
         return len(self.cards)
 
+
 class Field:
     """Represents a field in front of a player"""
+
     def __init__(self, enabled):
         self.cards = []
         self.enabled = enabled
-    
+
     def to_dict(self):
         """Returns card as dictionary"""
         name = "Empty"
@@ -73,6 +79,7 @@ class Field:
             "count": len(self.cards),
             "enabled": self.enabled
         }
+
     def get_name(self):
         return self.cards[0].name
 

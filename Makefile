@@ -8,4 +8,8 @@ requirements: ## Install requirements
 	pip install -r requirements.txt
 
 run: ## Run server
-	python3 TBG.py
+	python -m py_compile *.py
+	python TBG.py
+
+format: ## Auto-format to PEP8
+	autopep8 --in-place --aggressive --aggressive *.py

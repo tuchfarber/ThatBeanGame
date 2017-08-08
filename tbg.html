@@ -8,13 +8,15 @@
                 border: 1px solid black;
                 border-collapse: collapse;
             }
+            html,body{
+                font-size:12px;
+                font-family: monospace
+            }
         </style>
     </head>
     <body>
         <div id="content">
-            <hr>
-            <div>{{lastresponse}}</div>
-            <hr>
+            <h2>Login</h2>
             <div>
                 <input v-model="username" placeholder="Username"></input>
                 <input v-model="game" placeholder="Game ID"></input>
@@ -24,22 +26,43 @@
             <button v-on:click="startGame">Start Game</button>
             <button v-on:click="update">Update</button>
             <hr>
+            <h2>Info</h2>
             <h3>Game Info</h3>
-            <div><b>Name:</b> {{all_data.current_player}}</div>
-            <div><b>Game:</b> {{all_data.game_id}}</div>
-            <div><b>Deck Size:</b> {{all_data.deck_count}}</div>
-            <div><b>Discard Size:</b> {{all_data.discard_count}}</div>
-            <div><b>Stage:</b> {{all_data.stage}}</div>
-            <div><b>Playthrough:</b> {{all_data.playthrough}}</div>
-            <div><b>Status:</b> {{all_data.status}}</div>
+            <div>Current Player: {{all_data.current_player}}</div>
+            <div>Game: {{all_data.game_id}}</div>
+            <div>Deck Size: {{all_data.deck_count}}</div>
+            <div>Discard Size: {{all_data.discard_count}}</div>
+            <div>Stage: {{all_data.stage}}</div>
+            <div>Playthrough: {{all_data.playthrough}}</div>
+            <div>Status: {{all_data.status}}</div>
+            <div v-if="all_data.market != undefined">
+                Market: 
+                <table>
+                    <tr>
+                        <th>Location</th>
+                        <th>Name</th>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td v-if="all_data.market[0]">{{all_data.market[0].name}}</td>
+                        <td v-if="!all_data.market[0]">Empty</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td v-if="all_data.market[1]">{{all_data.market[1].name}}</td>
+                        <td v-if="!all_data.market[1]">Empty</td>
+                    </tr>
+                    -->
+                </table>
+            </div>
             <br>
             <h3>Player Info</h3>
             <div v-if="all_data.player_info != undefined">
                 
-                <div><b>Coins:</b> {{all_data.player_info.coins}}</div>
-                <div><b>Host:</b> {{all_data.player_info.is_host}}</div>
+                <div>Coins: {{all_data.player_info.coins}}</div>
+                <div>Host: {{all_data.player_info.is_host}}</div>
                 <div>
-                    <b>Hand:</b>
+                    Hand:
                     <table>
                         <tr>
                             <th>Name</th>
@@ -54,7 +77,7 @@
                     </table>
                 </div>
                 <div>
-                    <b>Field:</b>
+                    Field:
                     <table>
                         <tr>
                             <th>Name</th>
@@ -72,7 +95,7 @@
             <h3>Other Players</h3>
             <div v-if="all_data.players != undefined">
                 <div>
-                    <b>Players:</b>
+                    Players:
                     <table>
                         <tr>
                             <th>Name</th>
@@ -98,23 +121,24 @@
                         </tr>
                     </table>
                 </div>
-                <div>
-                    <b>Field:</b>
-                    <table>
-                        <tr>
-                            <th>Name</th>
-                            <th>Count</th>
-                            <th>Enabled</th>
-                        </tr>
-                        <tr v-for="field in all_data.player_info.fields">
-                            <td>{{field.name}}</td>
-                            <td>{{field.count}}</td>
-                            <td>{{field.enabled}}</td>
-                        </tr>
-                    </table>
-                </div>
             </div>
-
+            <hr>
+            <h2>Actions</h2>
+            <div>
+                <b>Play card from hand: </b>
+                <button v-on:click="playCardFromHand(0)">Play on Field 1</button>
+                <button v-on:click="playCardFromHand(1)">Play on Field 2</button>
+                <button v-on:click="playCardFromHand(2)">Play on Field 3</button>
+            </div>
+            <div><b>Play card from market</b> [market_index] [field_index]</div>
+            <div>
+                <b>Draw cards to hand:</b>
+                <button v-on:click="drawCardsToHand()">Draw</button>
+            </div>
+            <div>
+                <b>Draw cards to market:</b>
+                <button v-on:click="drawCardsToMarket()">Draw</button>
+            </div>
         </div>
         <script>
             content = new Vue({
@@ -136,10 +160,10 @@
                             {"name":this.username}
                         )
                         .then(response => {
-                            this.game = response.body.data.game;
+                            this.game = response.body.game;
                             this.update()
                         }, response => {
-                            this.lastresponse = JSON.stringify(response.body)
+                            alert(JSON.stringify(response.body))
                         });
                     },
                     joinGame: function(){
@@ -150,7 +174,7 @@
                         .then(response => {
                             this.update()
                         }, response => {
-                            this.lastresponse = JSON.stringify(response.body)
+                            alert(JSON.stringify(response.body))
                         });
                     },
                     startGame: function(){
@@ -160,7 +184,18 @@
                         .then(response => {
                             this.update()
                         }, response => {
-                            this.lastresponse = JSON.stringify(response.body)
+                            alert(JSON.stringify(response.body))
+                        });
+                    },
+                    playCardFromHand: function(field){
+                        this.$http.post(
+                            this.base_url + '/game/' + this.game + '/play/hand',
+                            {"field_index": field}
+                        )
+                        .then(response => {
+                            this.update()
+                        }, response => {
+                            alert(JSON.stringify(response.body))
                         });
                     },
                     update: function(){
@@ -171,7 +206,7 @@
                             this.all_data = response.body;
                             this.player_info = this.all_data.player_info;
                         }, response => {
-                            this.lastresponse = JSON.stringify(response.body)
+                            alert(JSON.stringify(response.body))
                         });
                     }
                 }
