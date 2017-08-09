@@ -9,7 +9,8 @@ class Game:
     STAGES = (
         'First Card',
         'Second Card',
-        'Open Market'
+        'Pre Market Flip',
+        'Post Market Flip'
     )
     MAX_PLAYERS = 7
 
@@ -58,11 +59,17 @@ class Game:
             'status': self.status,
             'game_id': self.id,
             'stage': Game.STAGES[self.stage_index],
-            'market': self.market
+            'market': self.market_to_dict()
         }
 
-    def deck_to_market(self):
+    def deck_to_market(self, player):
+        '''Draws top 2 cards from deck and places them in market'''
+        stage_check = self.verify_stage(Game.STAGES[1:3])
+        turn_check = self.verify_turn(player)
+        if stage_check or turn_check:
+            return stage_check or turn_check
         self.add_to_market([self.deck.pop(), self.deck.pop()])
+        self.go_next_stage()
         return success('Cards drawn into market')
 
     def add_to_market(self, cards):
@@ -80,7 +87,7 @@ class Game:
         '''
         Plays card from market to field. No confirmation.
         '''
-        result = self.play_card(player, field_index, [Game.STAGES[2]], market_index)
+        result = self.play_card(player, field_index, [Game.STAGES[3]], market_index)
         return result
 
     def play_card(self, player, field_index, valid_stages, market_index=None):
@@ -113,7 +120,7 @@ class Game:
         return success('Card successfully played')
 
     def deck_to_hand(self, player):
-        stage_check = self.verify_stage(Game.STAGES[2])
+        stage_check = self.verify_stage(Game.STAGES[3])
         turn_check = self.verify_turn(player)
         if stage_check or turn_check:
             return stage_check or turn_check
@@ -157,6 +164,14 @@ class Game:
         for player in self.players:
             for _ in range(5):
                 player.hand.append(self.deck.pop())
+
+    def market_to_dict(self):
+        obj = {0: None, 1: None}
+        if self.market[0]:
+            obj[0] = self.market[0].to_dict()
+        if self.market[1]:
+            obj[1] = self.market[1].to_dict()
+        return obj
 
     def get_updates(self):
         return

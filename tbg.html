@@ -52,7 +52,6 @@
                         <td v-if="all_data.market[1]">{{all_data.market[1].name}}</td>
                         <td v-if="!all_data.market[1]">Empty</td>
                     </tr>
-                    -->
                 </table>
             </div>
             <br>
@@ -174,7 +173,7 @@
                         .then(response => {
                             this.update()
                         }, response => {
-                            alert(JSON.stringify(response.body))
+                            alert(JSON.stringify(response.body.error))
                         });
                     },
                     startGame: function(){
@@ -184,7 +183,7 @@
                         .then(response => {
                             this.update()
                         }, response => {
-                            alert(JSON.stringify(response.body))
+                            alert(JSON.stringify(response.body.error))
                         });
                     },
                     playCardFromHand: function(field){
@@ -195,7 +194,17 @@
                         .then(response => {
                             this.update()
                         }, response => {
-                            alert(JSON.stringify(response.body))
+                            alert(JSON.stringify(response.body.error))
+                        });
+                    },
+                    drawCardsToMarket: function(){
+                        this.$http.post(
+                            this.base_url + '/game/' + this.game + '/draw/market'
+                        )
+                        .then(response => {
+                            this.update()
+                        }, response => {
+                            alert(JSON.stringify(response.body.error))
                         });
                     },
                     update: function(){
@@ -206,7 +215,7 @@
                             this.all_data = response.body;
                             this.player_info = this.all_data.player_info;
                         }, response => {
-                            alert(JSON.stringify(response.body))
+                            alert(JSON.stringify(response.body.error))
                         });
                     }
                 }

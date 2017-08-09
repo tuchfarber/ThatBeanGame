@@ -7,7 +7,8 @@ import json
 from player import Player
 from game import Game
 import util
-from util import error, success
+#from util import error, success
+import util
 
 # from game import Game
 
@@ -16,18 +17,16 @@ app = Bottle()
 games = {}
 clients = {}
 
-# Decorators
-
 
 def check_valid_request(f):
-    '''Verifies game exists and client is authorized. Returns game and client'''
+    '''Decorator. Verifies game exists and client is authorized. Returns game and client'''
     def decorate(*args, **kwargs):
         game = util.get_game(kwargs['game_id'], games)
         if not game:
-            abort(400, error('Game does not exist'))
+            abort(400, util.error('Game does not exist'))
         player = util.get_player(game, request.get_cookie('tbg_token'))
         if not player:
-            abort(400, error('Not authorized to view game'))
+            abort(400, util.error('Not authorized to view game'))
         return f(game, player)
     return decorate
 
@@ -35,7 +34,13 @@ def check_valid_request(f):
 def error_check(result):
     '''Aborts with 400 if result is error'''
     if result.get('error'):
-        abort(400, error(result.get('error')))
+        abort(400, result)
+    return result
+
+
+@app.error(400)
+def error400(err):
+    return err.body
 
 
 @app.hook('after_request')
@@ -68,7 +73,7 @@ def access():
     if cookie and cookie in clients:
         game_id = clients[cookie]
         return {'game': game_id}
-    abort(400, error('Access denied'))
+    abort(400, util.error('Access denied'))
 
 
 @app.route('/login', method='POST')
@@ -79,20 +84,20 @@ def login():
     '''
     login_data = request.json
     if 'game' not in login_data or 'name' not in login_data:
-        abort(400, error('Please supply name and game ID'))
+        abort(400, util.error('Please supply name and game ID'))
     if login_data['game'] not in games:
-        abort(400, error('Game does not exist'))
+        abort(400, util.error('Game does not exist'))
     if login_data['name'] in [player.name for player in games[login_data['game']].players]:
-        abort(400, error('User already exists with that name'))
+        abort(400, util.error('User already exists with that name'))
     if games[login_data['game']].status != 'Awaiting':
-        abort(400, error('Game has already started or ended'))
+        abort(400, util.error('Game has already started or ended'))
     if games[login_data['game']].is_full():
-        abort(400, error('Game is full'))
+        abort(400, util.error('Game is full'))
     player = Player(login_data['name'])
     games[login_data['game']].add_player(player)
     response.set_cookie('tbg_token', player.token, max_age=400)
     clients[player.token] = login_data['game']
-    return success("Successfully logged into game")
+    return util.success('Successfully logged into game')
 
 
 @app.route('/create', method='POST')
@@ -100,7 +105,7 @@ def create_new_game():
     '''Creates new player and game, returns game id'''
     login_data = request.json
     if 'name' not in login_data:
-        abort(400, error('Name not supplied'))
+        abort(400, util.error('Name not supplied'))
     player = Player(login_data['name'])
     game = Game()
     game.add_player(player)
@@ -152,7 +157,7 @@ def play_card_from_market(game, player):
 @check_valid_request
 def draw_for_market(game, player):
     '''Draws two cards and places them in market'''
-    result = game.deck_to_market()
+    result = game.deck_to_market(player)
     error_check(result)
     return result
 
