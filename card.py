@@ -1,18 +1,18 @@
 import random
-
+from typing import List, Dict, Tuple
 
 class Card:
     """Represents one card in game"""
-    MAX_CARDS = 24
-    MIN_CARDS = 0
+    MAX_CARDS: int = 24
+    MIN_CARDS: int = 0
 
-    def __init__(self, name, count, values, img_src):
-        self.name = name
-        self.count = count
-        self.values = values
-        self.img_src = img_src
+    def __init__(self, name: str, count: int, values: tuple, img_src: str) -> None:
+        self.name: str = name
+        self.count: int = count
+        self.values: tuple = values
+        self.img_src: str = img_src
 
-    def to_dict(self):
+    def to_dict(self) -> Dict:
         """Returns Card as dictionary"""
         return {
             "name": self.name,
@@ -25,12 +25,12 @@ class Card:
 class Deck:
     """Represents a deck in game. Can be used for draw deck or discard"""
 
-    def __init__(self):
-        self.cards = []
+    def __init__(self) -> None:
+        self.cards: List[Card] = []
 
-    def build_deck(self):
+    def build_deck(self) -> None:
         """Builds deck from standard cards"""
-        card_types = (
+        card_types: Tuple[Tuple[str, int, Tuple[int, int, int, int], str],...] = (
             ("Cocoa Bean", 4, (Card.MAX_CARDS, 2, 3, 4), "assets/beans/cocoa.jpg"),
             ("Garden Bean", 6, (Card.MAX_CARDS, 2, 3, Card.MAX_CARDS), "assets/beans/garden.jpg"),
             ("Red Bean", 8, (2, 3, 4, 5), "assets/beans/red.jpg"),
@@ -45,19 +45,19 @@ class Deck:
         )
         for card_type in card_types:
             for _ in range(card_type[1]):
-                new_card = Card(*card_type)
+                new_card: Card = Card(*card_type)
                 self.cards.append(new_card)
 
-    def pop(self):
-        card = self.cards[-1]
+    def pop(self) -> Card:
+        card: Card = self.cards[-1]
         self.cards = self.cards[:-1]
         return card
 
-    def shuffle(self):
+    def shuffle(self) -> None:
         """Shuffles card in deck"""
         random.shuffle(self.cards)
 
-    def get_length(self):
+    def get_length(self) -> int:
         """Returns number of cards in deck"""
         return len(self.cards)
 
@@ -65,13 +65,13 @@ class Deck:
 class Field:
     """Represents a field in front of a player"""
 
-    def __init__(self, enabled):
-        self.cards = []
-        self.enabled = enabled
+    def __init__(self, enabled: bool) -> None:
+        self.cards: List[Card] = []
+        self.enabled: bool = enabled
 
-    def to_dict(self):
+    def to_dict(self) -> Dict:
         """Returns card as dictionary"""
-        name = "Empty"
+        name: str = "Empty"
         if self.cards:
             name = self.get_name()
         return {
@@ -80,21 +80,22 @@ class Field:
             "enabled": self.enabled
         }
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self.cards[0].name
 
-    def add_card(self, card):
-        if not self.cards or card.name == self.get_name():
-            self.cards.append(card)
-            return True
-        return False
+    def add_card(self, card: Card) -> bool:
+        if card.name != self.get_name():
+            return False
+        self.cards.append(card)
+        return True
 
-    def get_trade_value(self):
+    def get_trade_value(self) -> int:
         """Returns coins gained from cashing in cards"""
-        if not self.cards:
+        try:
+            first_card: Card = self.cards[0]
+        except IndexError:
             return 0
-        first_card = self.cards[0]
-        value_ranges = (
+        value_ranges: Tuple[List[int],...] = (
             list(range(first_card.values[0], first_card.values[1])),
             list(range(first_card.values[1], first_card.values[2])),
             list(range(first_card.values[2], first_card.values[3])),
@@ -104,14 +105,3 @@ class Field:
             if len(self.cards) in value_range:
                 return value + 1
         return 0
-
-    def cash_in(self, player, discards):
-        '''Adds coins to player and clears field'''
-        if not self.cards:
-            self.cards = []
-        value = self.get_trade_value()
-        player.coins += value
-        self.cards = self.cards[:-value]
-        for card in self.cards:
-            discards.cards.append(card)
-        self.cards = []

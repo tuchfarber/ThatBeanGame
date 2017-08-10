@@ -4,3 +4,4 @@ __pycache__/
 notes
 .vscode
 venv
+.mypy_cache

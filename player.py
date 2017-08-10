@@ -1,30 +1,31 @@
-from card import Field
+from card import Field, Card
 import uuid
+from typing import Dict, List, Optional
 
 
 class Player:
     """Represents a player in the game"""
 
-    def __init__(self, name):
-        self.name = name
-        self.hand = []
-        self.fields = []
-        self.coins = 0
-        self.is_host = False
-        self.token = str(uuid.uuid4())
+    def __init__(self, name: str) -> None:
+        self.name: str = name
+        self.hand: List[Card] = []
+        self.fields: List[Field] = []
+        self.coins: int = 0
+        self.is_host: bool = False
+        self.token: str = str(uuid.uuid4())
 
         # Create 3 fields
         self.fields.append(Field(True))
         self.fields.append(Field(True))
         self.fields.append(Field(False))
 
-    def get_first_card(self):
+    def get_first_card(self) -> Card:
         """Removes first card from hand and returns it"""
-        first_card = self.hand[0]
+        first_card: Card = self.hand[0]
         self.hand = self.hand[1:]
         return first_card
 
-    def to_dict_public(self):
+    def to_dict_public(self) -> Dict:
         """Returns all public knowledge as dictionary"""
         return {
             "name": self.name,
@@ -34,8 +35,8 @@ class Player:
             "is_host": self.is_host
         }
 
-    def to_dict_private(self):
+    def to_dict_private(self) -> Dict:
         """Returns all private knowledge as dictionary"""
-        knowledge = self.to_dict_public()
+        knowledge: Dict = self.to_dict_public()
         knowledge["hand"] = [card.to_dict() for card in self.hand]
         return knowledge
