@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 
 class Player:
-    """Represents a player in the game"""
+    '''Represents a player in the game'''
 
     def __init__(self, name: str) -> None:
         self.name: str = name
@@ -20,13 +20,13 @@ class Player:
         self.fields.append(Field(False))
 
     def get_first_card(self) -> Card:
-        """Removes first card from hand and returns it"""
+        '''Removes first card from hand and returns it'''
         first_card: Card = self.hand[0]
         self.hand = self.hand[1:]
         return first_card
 
     def to_dict_public(self) -> Dict:
-        """Returns all public knowledge as dictionary"""
+        '''Returns all public knowledge as dictionary'''
         return {
             "name": self.name,
             "hand_count": len(self.hand),
@@ -36,7 +36,7 @@ class Player:
         }
 
     def to_dict_private(self) -> Dict:
-        """Returns all private knowledge as dictionary"""
+        '''Returns all private knowledge as dictionary'''
         knowledge: Dict = self.to_dict_public()
         knowledge["hand"] = [card.to_dict() for card in self.hand]
         return knowledge

@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple
 
 
 class Card:
-    """Represents one card in game"""
+    '''Represents one card in game'''
     MAX_CARDS: int = 24
     MIN_CARDS: int = 0
 
@@ -14,7 +14,7 @@ class Card:
         self.img_src: str = img_src
 
     def to_dict(self) -> Dict:
-        """Returns Card as dictionary"""
+        '''Returns Card as dictionary'''
         return {
             "name": self.name,
             "count": self.count,
@@ -24,13 +24,13 @@ class Card:
 
 
 class Deck:
-    """Represents a deck in game. Can be used for draw deck or discard"""
+    '''Represents a deck in game. Can be used for draw deck or discard'''
 
     def __init__(self) -> None:
         self.cards: List[Card] = []
 
     def build_deck(self) -> None:
-        """Builds deck from standard cards"""
+        '''Builds deck from standard cards'''
         card_types: Tuple[Tuple[str, int, Tuple[int, int, int, int], str], ...] = (
             ("Cocoa Bean", 4, (Card.MAX_CARDS, 2, 3, 4), "assets/beans/cocoa.jpg"),
             ("Garden Bean", 6, (Card.MAX_CARDS, 2, 3, Card.MAX_CARDS), "assets/beans/garden.jpg"),
@@ -55,23 +55,29 @@ class Deck:
         return card
 
     def shuffle(self) -> None:
-        """Shuffles card in deck"""
+        '''Shuffles card in deck'''
         random.shuffle(self.cards)
 
     def get_length(self) -> int:
-        """Returns number of cards in deck"""
+        '''Returns number of cards in deck'''
         return len(self.cards)
+
+    def take_all(self) -> List[Card]:
+        '''Removes card from deck and returns them'''
+        all_cards: List[Card] = [card for card in self.cards]
+        self.cards = []
+        return all_cards
 
 
 class Field:
-    """Represents a field in front of a player"""
+    '''Represents a field in front of a player'''
 
     def __init__(self, enabled: bool) -> None:
         self.cards: List[Card] = []
         self.enabled: bool = enabled
 
     def to_dict(self) -> Dict:
-        """Returns card as dictionary"""
+        '''Returns card as dictionary'''
         name: str = "Empty"
         if self.cards:
             name = self.get_name()
@@ -82,16 +88,20 @@ class Field:
         }
 
     def get_name(self) -> str:
-        return self.cards[0].name
+        try:
+            name = self.cards[0].name
+        except IndexError:
+            name = "Empty"
+        return name
 
     def add_card(self, card: Card) -> bool:
-        if card.name != self.get_name():
+        if card.name != self.get_name() and self.get_name() != "Empty":
             return False
         self.cards.append(card)
         return True
 
     def get_trade_value(self) -> int:
-        """Returns coins gained from cashing in cards"""
+        '''Returns coins gained from cashing in cards'''
         try:
             first_card: Card = self.cards[0]
         except IndexError:

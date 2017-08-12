@@ -104,7 +104,7 @@ class Game:
         field: Field = player.fields[field_index]
         if not field.add_card(card):
             self.cash_in(field, player, self.discards)
-            field.add_card(card)
+            print(field.add_card(card))
             if market_index is not None:
                 self.market[market_index] = None
             else:
@@ -123,7 +123,8 @@ class Game:
         turn_check: Dict[str, str] = self.verify_turn(player)
         if stage_check or turn_check:
             return stage_check or turn_check
-
+        if self.market[0] or self.market[1]:
+            return error("Cannot draw cards until market is empty")
         for _ in range(2):
             player.hand.append(self.deck.pop())
         self.go_next_stage()
@@ -182,3 +183,22 @@ class Game:
         for card in field.cards:
             discards.cards.append(card)
         field.cards = []
+
+    def draw_cards(self, card_count: int) -> List[Card]:
+        '''Draws card for user and shuffles if necessary'''
+        cards: List[Card] = []
+        for i in range(card_count):
+            if self.deck.get_length() == 0:
+                if self.playthough == 2:
+                    self.end_game()
+                    return
+                self.playthough += 1
+                self.deck.cards = self.discards.take_all()
+                self.deck.shuffle()
+            cards.append(self.deck.pop())
+        return cards 
+
+    def end_game(self):
+        '''End the game'''
+        pass
+            
