@@ -8,10 +8,6 @@ from typing import Dict
 from player import Player
 from game import Game
 import util
-#from util import error, success
-import util
-
-# from game import Game
 
 app = Bottle()
 
@@ -26,7 +22,7 @@ def check_valid_request(f):
             game: Game = games[kwargs['game_id']]
         except KeyError:
             abort(400, util.error('Game does not exist'))
-        
+
         try:
             player: Player = [player for player in game.players if player.token == request.get_cookie('tbg_token')][0]
         except IndexError:
@@ -65,7 +61,7 @@ def enable_options():
 @app.route('/', method='GET')
 def home():
     '''Returns webpage'''
-    return static_file('tbg.html', './')
+    return static_file('app/static/tbg.html', './')
 
 
 @app.route('/access', method='GET')
@@ -100,7 +96,7 @@ def login() -> Dict:
         game: Game = games[game_id]
     except KeyError:
         abort(400, util.error('Game does not exist'))
-        
+
     if name in [player.name for player in game.players]:
         abort(400, util.error('User already exists with that name'))
     if game.status != 'Awaiting':
@@ -187,5 +183,6 @@ def draw_for_hand(game: Game, player: Player) -> Dict:
     return result
 
 
+print("Server starting...")
 server = WSGIServer(('0.0.0.0', 8080), app, handler_class=WebSocketHandler)
 server.serve_forever()

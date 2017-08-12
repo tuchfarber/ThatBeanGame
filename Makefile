@@ -8,8 +8,12 @@ requirements: ## Install requirements
 	pip install -r requirements.txt
 
 run: ## Run server
-	python -m py_compile *.py
-	python TBG.py
+	python -m py_compile app/*.py
+	mypy --ignore-missing-imports  app/TBG.py 
+	python app/TBG.py
 
 format: ## Auto-format to PEP8
-	autopep8 --in-place --aggressive --aggressive *.py
+	autopep8 --in-place --aggressive --aggressive app/*.py
+
+env: ## Build virtual environment
+	virtualenv -p `which python3.6` venv

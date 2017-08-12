@@ -92,7 +92,8 @@ class Game:
         result: Dict = self.play_card(player, field_index, tuple(Game.STAGES[3]), market_index)
         return result
 
-    def play_card(self, player: Player, field_index: int, valid_stages: Tuple[str, ...], market_index: int=None) -> Dict[str, str]:
+    def play_card(self, player: Player, field_index: int,
+                  valid_stages: Tuple[str, ...], market_index: int=None) -> Dict[str, str]:
         stage_check: Dict[str, str] = self.verify_stage(valid_stages)
         turn_check: Dict[str, str] = self.verify_turn(player)
         field_check: Dict[str, str] = self.verify_field(player, field_index)

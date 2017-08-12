@@ -1,6 +1,7 @@
 import random
 from typing import List, Dict, Tuple
 
+
 class Card:
     """Represents one card in game"""
     MAX_CARDS: int = 24
@@ -30,7 +31,7 @@ class Deck:
 
     def build_deck(self) -> None:
         """Builds deck from standard cards"""
-        card_types: Tuple[Tuple[str, int, Tuple[int, int, int, int], str],...] = (
+        card_types: Tuple[Tuple[str, int, Tuple[int, int, int, int], str], ...] = (
             ("Cocoa Bean", 4, (Card.MAX_CARDS, 2, 3, 4), "assets/beans/cocoa.jpg"),
             ("Garden Bean", 6, (Card.MAX_CARDS, 2, 3, Card.MAX_CARDS), "assets/beans/garden.jpg"),
             ("Red Bean", 8, (2, 3, 4, 5), "assets/beans/red.jpg"),
@@ -95,7 +96,7 @@ class Field:
             first_card: Card = self.cards[0]
         except IndexError:
             return 0
-        value_ranges: Tuple[List[int],...] = (
+        value_ranges: Tuple[List[int], ...] = (
             list(range(first_card.values[0], first_card.values[1])),
             list(range(first_card.values[1], first_card.values[2])),
             list(range(first_card.values[2], first_card.values[3])),
