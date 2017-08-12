@@ -89,7 +89,7 @@ class Game:
         '''
         Plays card from market to field. No confirmation.
         '''
-        result: Dict = self.play_card(player, field_index, tuple(Game.STAGES[3]), market_index)
+        result: Dict = self.play_card(player, field_index, tuple([Game.STAGES[3]]), market_index)
         return result
 
     def play_card(self, player: Player, field_index: int,
@@ -99,8 +99,9 @@ class Game:
         field_check: Dict[str, str] = self.verify_field(player, field_index)
         if stage_check or turn_check or field_check:
             return stage_check or turn_check or field_check
-        card: Card = self.market[market_index] if market_index else player.hand[0]
-
+        card: Card = self.market[market_index] if market_index is not None else player.hand[0]
+        if not card:
+            return error("No card in that spot")
         field: Field = player.fields[field_index]
         if not field.add_card(card):
             self.cash_in(field, player, self.discards)
@@ -119,7 +120,7 @@ class Game:
         return success('Card successfully played')
 
     def deck_to_hand(self, player: Player) -> Dict[str, str]:
-        stage_check: Dict[str, str] = self.verify_stage(tuple(Game.STAGES[3]))
+        stage_check: Dict[str, str] = self.verify_stage(tuple([Game.STAGES[3]]))
         turn_check: Dict[str, str] = self.verify_turn(player)
         if stage_check or turn_check:
             return stage_check or turn_check
@@ -189,10 +190,10 @@ class Game:
         cards: List[Card] = []
         for i in range(card_count):
             if self.deck.get_length() == 0:
-                if self.playthough == 2:
+                if self.playthrough == 2:
                     self.end_game()
-                    return
-                self.playthough += 1
+                    return None
+                self.playthrough += 1
                 self.deck.cards = self.discards.take_all()
                 self.deck.shuffle()
             cards.append(self.deck.pop())

@@ -129,7 +129,16 @@
                 <button v-on:click="playCardFromHand(1)">Play on Field 2</button>
                 <button v-on:click="playCardFromHand(2)">Play on Field 3</button>
             </div>
-            <div><b>Play card from market</b> [market_index] [field_index]</div>
+            <div>
+                <b>Play card from market</b>
+                <button v-on:click="playCardFromMarket(0, 0)">Play Market 1 to Field 1</button>
+                <button v-on:click="playCardFromMarket(0, 1)">Play Market 1 to Field 2</button>
+                <button v-on:click="playCardFromMarket(0, 2)">Play Market 1 to Field 3</button>
+                <button v-on:click="playCardFromMarket(1, 0)">Play Market 2 to Field 1</button>
+                <button v-on:click="playCardFromMarket(1, 1)">Play Market 2 to Field 2</button>
+                <button v-on:click="playCardFromMarket(1, 2)">Play Market 2 to Field 3</button>
+                
+                 [market_index] [field_index]</div>
             <div>
                 <b>Draw cards to hand:</b>
                 <button v-on:click="drawCardsToHand()">Draw</button>
@@ -197,9 +206,30 @@
                             alert(JSON.stringify(response.body.error))
                         });
                     },
+                    playCardFromMarket: function(market, field){
+                        this.$http.post(
+                            this.base_url + '/game/' + this.game + '/play/market',
+                            {"field_index": field, "market_index": market}
+                        )
+                        .then(response => {
+                            this.update()
+                        }, response => {
+                            alert(JSON.stringify(response.body.error))
+                        });
+                    },
                     drawCardsToMarket: function(){
                         this.$http.post(
                             this.base_url + '/game/' + this.game + '/draw/market'
+                        )
+                        .then(response => {
+                            this.update()
+                        }, response => {
+                            alert(JSON.stringify(response.body.error))
+                        });
+                    },
+                    drawCardsToHand: function(){
+                        this.$http.post(
+                            this.base_url + '/game/' + this.game + '/draw/hand'
                         )
                         .then(response => {
                             this.update()

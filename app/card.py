@@ -91,11 +91,11 @@ class Field:
         try:
             name = self.cards[0].name
         except IndexError:
-            name = "Empty"
+            name = None
         return name
 
     def add_card(self, card: Card) -> bool:
-        if card.name != self.get_name() and self.get_name() != "Empty":
+        if card.name != self.get_name() and self.get_name():
             return False
         self.cards.append(card)
         return True
