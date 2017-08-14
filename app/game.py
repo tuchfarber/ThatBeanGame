@@ -3,8 +3,9 @@ from player import Player
 import uuid
 import json
 import asyncio
-from util import error, success
+import util
 from typing import List, Dict, Tuple
+from trade import Trade, TradingCard
 
 
 class Game:
@@ -25,7 +26,8 @@ class Game:
         self.status: str = 'Awaiting'  # Awaiting, Running, Completed
         self.id: str = str(uuid.uuid4())[:6]
         self.stage_index: int = 0
-        self.market: Dict[int, Card] = {0: None, 1: None}
+        self.market: List[Card] = []
+        self.trades: List[Trade] = []
 
         self.deck.build_deck()
         self.deck.shuffle()
@@ -43,12 +45,12 @@ class Game:
 
     def start_game(self, player: Player) -> Dict[str, str]:
         if self.status != 'Awaiting':
-            return error('Game has already started')
+            return util.error('Game has already started')
         if not player.is_host:
-            return error('Only host can start game')
+            return util.error('Only host can start game')
         self.deal_cards()
         self.status = 'Running'
-        return success('Successfully started game')
+        return util.success('Successfully started game')
 
     def retrieve_game(self, player: Player) -> Dict:
         return {
@@ -70,13 +72,12 @@ class Game:
         turn_check: Dict = self.verify_turn(player)
         if stage_check or turn_check:
             return stage_check or turn_check
-        self.add_to_market([self.deck.pop(), self.deck.pop()])
+        self.market += self.draw_cards(2)
         self.go_next_stage()
-        return success('Cards drawn into market')
+        return util.success('Cards drawn into market')
 
     def add_to_market(self, cards: List[Card]):
-        self.market[0] = cards[0]
-        self.market[1] = cards[1]
+        self.market += cards
 
     def hand_to_field(self, player: Player, field_index: int) -> Dict[str, str]:
         '''
@@ -85,52 +86,54 @@ class Game:
         result: Dict = self.play_card(player, field_index, Game.STAGES[:2])
         return result
 
-    def market_to_field(self, player: Player, field_index: int, market_index: int) -> Dict[str, str]:
+    def market_to_field(self, player: Player, field_index: int, card_id: int) -> Dict[str, str]:
         '''
         Plays card from market to field. No confirmation.
         '''
-        result: Dict = self.play_card(player, field_index, tuple([Game.STAGES[3]]), market_index)
+        result: Dict = self.play_card(player, field_index, tuple([Game.STAGES[3]]), card_id)
         return result
 
     def play_card(self, player: Player, field_index: int,
-                  valid_stages: Tuple[str, ...], market_index: int=None) -> Dict[str, str]:
+                  valid_stages: Tuple[str, ...], card_id: int=None) -> Dict[str, str]:
         stage_check: Dict[str, str] = self.verify_stage(valid_stages)
         turn_check: Dict[str, str] = self.verify_turn(player)
         field_check: Dict[str, str] = self.verify_field(player, field_index)
         if stage_check or turn_check or field_check:
             return stage_check or turn_check or field_check
-        card: Card = self.market[market_index] if market_index is not None else player.hand[0]
+        if card_id:
+            card: Card = util.shrink([card for card in self.market if card.id == card_id])
+        else:
+            card = player.hand[0]
         if not card:
-            return error("No card in that spot")
+            return util.error("Incorrect card id")
         field: Field = player.fields[field_index]
         if not field.add_card(card):
             self.cash_in(field, player, self.discards)
             print(field.add_card(card))
-            if market_index is not None:
-                self.market[market_index] = None
+            if card_id:
+                self.market = [card for card in self.market if card.id != card_id]
             else:
                 player.hand = player.hand[1:]
                 self.go_next_stage()
-            return success('Field cashed in and card successfully played')
-        if market_index is not None:
-            self.market[market_index] = None
+            return util.success('Field cashed in and card successfully played')
+        if card_id:
+            self.market = [card for card in self.market if card.id != card_id]
         else:
             player.hand = player.hand[1:]
             self.go_next_stage()
-        return success('Card successfully played')
+        return util.success('Card successfully played')
 
     def deck_to_hand(self, player: Player) -> Dict[str, str]:
         stage_check: Dict[str, str] = self.verify_stage(tuple([Game.STAGES[3]]))
         turn_check: Dict[str, str] = self.verify_turn(player)
         if stage_check or turn_check:
             return stage_check or turn_check
-        if self.market[0] or self.market[1]:
-            return error("Cannot draw cards until market is empty")
-        for _ in range(2):
-            player.hand.append(self.deck.pop())
+        if self.market:
+            return util.error("Cannot draw cards until market is empty")
+        player.hand = player.hand + self.draw_cards(3)
         self.go_next_stage()
         self.go_next_player()
-        return success('Successfully drew two cards for hand')
+        return util.success('Successfully drew two cards for hand')
 
     def go_next_stage(self) -> None:
         self.stage_index = (self.stage_index + 1) % len(Game.STAGES)
@@ -140,19 +143,19 @@ class Game:
 
     def verify_stage(self, allowed_stages: Tuple[str, ...]) -> Dict[str, str]:
         if Game.STAGES[self.stage_index] not in allowed_stages:
-            return error('Invalid move')
+            return util.error('Invalid move')
         return None
 
     def verify_turn(self, player: Player) -> Dict[str, str]:
         if player != self.players[self.current_player_index]:
-            return error('It is not your turn')
+            return util.error('It is not your turn')
         return None
 
     def verify_field(self, player: Player, field_index: int) -> Dict[str, str]:
         if field_index not in range(0, len(player.fields)):
-            return error('Invalid field index')
+            return util.error('Invalid field index')
         if not player.fields[field_index].enabled:
-            return error('Field not yet bought')
+            return util.error('Field not yet bought')
         return None
 
     def deal_cards(self) -> None:
@@ -160,13 +163,8 @@ class Game:
             for _ in range(5):
                 player.hand.append(self.deck.pop())
 
-    def market_to_dict(self) -> Dict:
-        obj: Dict[int, Dict] = {0: None, 1: None}
-        if self.market[0]:
-            obj[0] = self.market[0].to_dict()
-        if self.market[1]:
-            obj[1] = self.market[1].to_dict()
-        return obj
+    def market_to_dict(self) -> List[Dict]:
+        return [card.to_dict() for card in self.market]
 
     def cash_in_field(self, player: Player, field: Field):
         value: int = field.get_trade_value()
@@ -202,4 +200,23 @@ class Game:
     def end_game(self):
         '''End the game'''
         pass
-            
+
+    def ids_to_tcs(self, player: Player, card_ids: List[int]) -> List[TradingCard]:
+        '''Call with a player and the ids they want to trade'''
+        tcs: List[TradingCard] = []
+        market_cards = [card for card in self.market if card.id in  card_ids]
+        hand_cards = [card for card in player.hand if card.id in card_ids]
+        tcs += [TradingCard(card, self.market) for card in market_cards]
+        tcs += [TradingCard(card, player.hand) for card in hand_cards]
+        return tcs
+    
+    def create_trade(self, p1: Player, p2_name: str, card_ids: List[int], wants: List[str]):
+        tcs: List[TradingCard] = self.ids_to_tcs(p1, card_ids)
+        trade: List[Trade] = []
+        if p2_name:
+            p2: Player = util.shrink([player for player in self.players if player.name == p2_name])
+            trade += [Trade(p1, p2, tcs, wants)]
+        else:
+            # If p2 is blank, create a global request
+            trade += [Trade(p1, _p2, tcs, wants) for _p2 in self.players if _p2 != p1]
+        self.trades += trade

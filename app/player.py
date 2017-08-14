@@ -13,6 +13,7 @@ class Player:
         self.coins: int = 0
         self.is_host: bool = False
         self.token: str = str(uuid.uuid4())
+        self.pending_cards: List[Card] = []
 
         # Create 3 fields
         self.fields.append(Field(True))

@@ -7,11 +7,12 @@ class Card:
     MAX_CARDS: int = 24
     MIN_CARDS: int = 0
 
-    def __init__(self, name: str, count: int, values: tuple, img_src: str) -> None:
+    def __init__(self, name: str, count: int, values: tuple, img_src: str, id: int) -> None:
         self.name: str = name
         self.count: int = count
         self.values: tuple = values
         self.img_src: str = img_src
+        self.id: int = id
 
     def to_dict(self) -> Dict:
         '''Returns Card as dictionary'''
@@ -19,7 +20,8 @@ class Card:
             "name": self.name,
             "count": self.count,
             "values": self.values,
-            "img": self.img_src
+            "img": self.img_src,
+            "id": self.id
         }
 
 
@@ -44,10 +46,12 @@ class Deck:
             ("Wax Bean", 22, (4, 7, 9, 11), "assets/beans/wax.jpg"),
             ("Coffee Bean", 24, (4, 7, 10, 12), "assets/beans/coffee.jpg")
         )
+        card_id: int = 1
         for card_type in card_types:
             for _ in range(card_type[1]):
-                new_card: Card = Card(*card_type)
+                new_card: Card = Card(*card_type, card_id)
                 self.cards.append(new_card)
+                card_id += 1
 
     def pop(self) -> Card:
         card: Card = self.cards[-1]

@@ -9,11 +9,14 @@ Currently the game will run and allows the following:
 * Starting a game
 * Playing a card from hand
 * Drawing 2 cards from deck to market
+* Drawing 3 cards from hand to market
 * Display game details
 * Display player hand
 * Display all players fields and points
+* Trade creation
 
 ### TODO
 * Implement better error handling
-* Implement user drawing cards
 * Implement trading
+* Implement websocket updates
+* Implement audio/video chat in app

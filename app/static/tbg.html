@@ -39,18 +39,25 @@
                 Market: 
                 <table>
                     <tr>
-                        <th>Location</th>
                         <th>Name</th>
+                        <th>Play to Field 1</th>
+                        <th>Play to Field 2</th>
+                        <th>Play to Field 3</th>
                     </tr>
-                    <tr>
-                        <td>1</td>
-                        <td v-if="all_data.market[0]">{{all_data.market[0].name}}</td>
-                        <td v-if="!all_data.market[0]">Empty</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td v-if="all_data.market[1]">{{all_data.market[1].name}}</td>
-                        <td v-if="!all_data.market[1]">Empty</td>
+                    
+                    <tr v-for="card in all_data.market">
+                        
+                        <td>{{card.name}}</td>
+                        
+                        <td>
+                            <button v-on:click="playCardFromMarket(card.id, 0)">Play</button>
+                        </td>
+                        <td>
+                            <button v-on:click="playCardFromMarket(card.id, 1)">Play</button>
+                        </td>
+                        <td>
+                            <button v-on:click="playCardFromMarket(card.id, 2)">Play</button>
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -130,16 +137,6 @@
                 <button v-on:click="playCardFromHand(2)">Play on Field 3</button>
             </div>
             <div>
-                <b>Play card from market</b>
-                <button v-on:click="playCardFromMarket(0, 0)">Play Market 1 to Field 1</button>
-                <button v-on:click="playCardFromMarket(0, 1)">Play Market 1 to Field 2</button>
-                <button v-on:click="playCardFromMarket(0, 2)">Play Market 1 to Field 3</button>
-                <button v-on:click="playCardFromMarket(1, 0)">Play Market 2 to Field 1</button>
-                <button v-on:click="playCardFromMarket(1, 1)">Play Market 2 to Field 2</button>
-                <button v-on:click="playCardFromMarket(1, 2)">Play Market 2 to Field 3</button>
-                
-                 [market_index] [field_index]</div>
-            <div>
                 <b>Draw cards to hand:</b>
                 <button v-on:click="drawCardsToHand()">Draw</button>
             </div>
@@ -206,10 +203,10 @@
                             alert(JSON.stringify(response.body.error))
                         });
                     },
-                    playCardFromMarket: function(market, field){
+                    playCardFromMarket: function(card_id, field){
                         this.$http.post(
                             this.base_url + '/game/' + this.game + '/play/market',
-                            {"field_index": field, "market_index": market}
+                            {"field_index": field, "card_id": card_id}
                         )
                         .then(response => {
                             this.update()

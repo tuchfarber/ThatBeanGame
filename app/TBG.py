@@ -3,7 +3,7 @@ from geventwebsocket import WebSocketError
 from geventwebsocket.handler import WebSocketHandler
 from bottle import request, Bottle, abort, response, route, post, run, static_file
 import json
-from typing import Dict
+from typing import Dict, List
 
 from player import Player
 from game import Game
@@ -84,13 +84,12 @@ def login() -> Dict:
     Adds user to the requested game as long as game isn't full or already started,
     game exists, and user name isn't already used in game.
     '''
-    login_data: Dict = request.json
 
     try:
-        name: str = login_data['name']
-        game_id: str = login_data['game']
+        name: str = request.json['name']
+        game_id: str = request.json['game']
     except KeyError:
-        abort(400, util.error('Please supply username and game ID'))
+        abort(400, util.error('Incorrect JSON data'))
 
     try:
         game: Game = games[game_id]
@@ -114,9 +113,8 @@ def login() -> Dict:
 @app.route('/create', method='POST')
 def create_new_game() -> Dict:
     '''Creates new player and game, returns game id'''
-    login_data: Dict = request.json
     try:
-        player: Player = Player(login_data['name'])
+        player: Player = Player(request.json['name'])
     except KeyError:
         abort(400, util.error('Name not supplied'))
     game: Game = Game()
@@ -149,8 +147,11 @@ def start_game(game: Game, player: Player) -> Dict:
 @check_valid_request
 def play_card_from_hand(game: Game, player: Player) -> Dict:
     '''Plays top card from hand to field specified'''
-    data: Dict = request.json
-    result: Dict = game.hand_to_field(player, data['field_index'])
+    try:
+        field_index: int = request.json['field_index']
+    except KeyError:
+        abort(400, util.error('Incorrect JSON data'))
+    result: Dict = game.hand_to_field(player, field_index)
     error_check(result)
     return result
 
@@ -159,8 +160,12 @@ def play_card_from_hand(game: Game, player: Player) -> Dict:
 @check_valid_request
 def play_card_from_market(game: Game, player: Player) -> Dict:
     '''Places card from market into field'''
-    data: Dict = request.json
-    result: Dict = game.market_to_field(player, data['field_index'], data['market_index'])
+    try:
+        field_index: int = request.json['field_index']
+        card_id: int = request.json['card_id']
+    except KeyError:
+        abort(400, util.error('Incorrect JSON data'))
+    result: Dict = game.market_to_field(player, field_index, card_id)
     error_check(result)
     return result
 
@@ -181,6 +186,25 @@ def draw_for_hand(game: Game, player: Player) -> Dict:
     result: Dict = game.deck_to_hand(player)
     error_check(result)
     return result
+
+@app.route('/game/<game_id>/trade/create')
+@check_valid_request
+def create_trade(game: Game, player: Player) -> Dict:
+    '''Creates new trade'''
+    try:
+        card_ids: List[int] = request.json['card_ids']
+        other_player_name: str = request.json['other_player']
+        wants: List[str] = request.json['wants'] # List of card names
+    except KeyError:
+        abort(400, util.error('Incorrect JSON data'))
+    
+    result = game.create_trade(player, other_player_name, card_ids, wants)
+    error_check(result)
+    return result
+    
+
+
+
 
 
 print("Server starting...")
