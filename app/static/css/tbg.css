@@ -1,0 +1,8 @@
+table,th,td{
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+html,body{
+    font-size:12px;
+    font-family: monospace
+}

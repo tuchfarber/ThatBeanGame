@@ -58,13 +58,9 @@ def enable_options():
     return
 
 
-@app.route('/', method='GET')
-def home():
-    '''Returns webpage'''
-    return static_file('app/static/tbg.html', './')
 
 
-@app.route('/access', method='GET')
+@app.route('/api/access', method='GET')
 def access() -> Dict:
     '''
     Checks if request has a cookie of a logged in user. If cookie exists it
@@ -78,7 +74,7 @@ def access() -> Dict:
     return {'game': game_id}
 
 
-@app.route('/login', method='POST')
+@app.route('/api/login', method='POST')
 def login() -> Dict:
     '''
     Adds user to the requested game as long as game isn't full or already started,
@@ -110,7 +106,7 @@ def login() -> Dict:
     return util.success('Successfully logged into game')
 
 
-@app.route('/create', method='POST')
+@app.route('/api/create', method='POST')
 def create_new_game() -> Dict:
     '''Creates new player and game, returns game id'''
     try:
@@ -125,7 +121,7 @@ def create_new_game() -> Dict:
     return {'game': game.id}
 
 
-@app.route('/game/<game_id>', method='GET')
+@app.route('/api/game/<game_id>', method='GET')
 @check_valid_request
 def game_status(game: Game, player: Player) -> Dict:
     '''Returns all game info'''
@@ -134,7 +130,7 @@ def game_status(game: Game, player: Player) -> Dict:
     return result
 
 
-@app.route('/game/<game_id>/start', method='POST')
+@app.route('/api/game/<game_id>/start', method='POST')
 @check_valid_request
 def start_game(game: Game, player: Player) -> Dict:
     '''Starts requested game if user is host'''
@@ -143,7 +139,7 @@ def start_game(game: Game, player: Player) -> Dict:
     return result
 
 
-@app.route('/game/<game_id>/play/hand', method='POST')
+@app.route('/api/game/<game_id>/play/hand', method='POST')
 @check_valid_request
 def play_card_from_hand(game: Game, player: Player) -> Dict:
     '''Plays top card from hand to field specified'''
@@ -156,7 +152,7 @@ def play_card_from_hand(game: Game, player: Player) -> Dict:
     return result
 
 
-@app.route('/game/<game_id>/play/market', method='POST')
+@app.route('/api/game/<game_id>/play/market', method='POST')
 @check_valid_request
 def play_card_from_market(game: Game, player: Player) -> Dict:
     '''Places card from market into field'''
@@ -169,7 +165,7 @@ def play_card_from_market(game: Game, player: Player) -> Dict:
     error_check(result)
     return result
 
-@app.route('/game/<game_id>/play/pending', method='POST')
+@app.route('/api/game/<game_id>/play/pending', method='POST')
 @check_valid_request
 def play_card_from_pending(game: Game, player: Player) -> Dict:
     '''Places card from market into field'''
@@ -183,7 +179,7 @@ def play_card_from_pending(game: Game, player: Player) -> Dict:
     return result
 
 
-@app.route('/game/<game_id>/draw/market', method='POST')
+@app.route('/api/game/<game_id>/draw/market', method='POST')
 @check_valid_request
 def draw_for_market(game: Game, player: Player) -> Dict:
     '''Draws two cards and places them in market'''
@@ -192,7 +188,7 @@ def draw_for_market(game: Game, player: Player) -> Dict:
     return result
 
 
-@app.route('/game/<game_id>/draw/hand', method='POST')
+@app.route('/api/game/<game_id>/draw/hand', method='POST')
 @check_valid_request
 def draw_for_hand(game: Game, player: Player) -> Dict:
     '''Draws three cards and places them in players hand'''
@@ -200,7 +196,7 @@ def draw_for_hand(game: Game, player: Player) -> Dict:
     error_check(result)
     return result
 
-@app.route('/game/<game_id>/trade/create', method='POST')
+@app.route('/api/game/<game_id>/trade/create', method='POST')
 @check_valid_request
 def create_trade(game: Game, player: Player) -> Dict:
     '''Creates new trade'''
@@ -215,7 +211,7 @@ def create_trade(game: Game, player: Player) -> Dict:
     error_check(result)
     return result
 
-@app.route('/game/<game_id>/trade/accept', method='POST')
+@app.route('/api/game/<game_id>/trade/accept', method='POST')
 @check_valid_request
 def accept_trade(game: Game, player: Player) -> Dict:
     '''Accepts a trade'''
@@ -228,9 +224,16 @@ def accept_trade(game: Game, player: Player) -> Dict:
     error_check(result)
     return result
 
+@app.route('/', method='GET')
+def index():
+    '''Returns webpage'''
+    return static_file('tbg.html', './app/static')
 
-
-
+@app.route('/<filename:path>', method='GET')
+def static_assets(filename):
+    print(filename)
+    '''Returns asset'''
+    return static_file(filename, './app/static')
 
 print("Server starting...")
 server = WSGIServer(('0.0.0.0', 8080), app, handler_class=WebSocketHandler)

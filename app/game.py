@@ -120,7 +120,7 @@ class Game:
         '''
         Plays card from users hand to field. No confirmation.
         '''
-        field = get_field(player, field_index)
+        field = self.verify_field(player, field_index)
         if field.get('error'):
             return field
         card: Card = player.hand[0]
@@ -134,17 +134,17 @@ class Game:
         '''
         Plays card from market to field. No confirmation.
         '''
-        field = get_field(player, field_index)
+        field = self.verify_field(player, field_index)
         if field.get('error'):
             return field
-        card: Card = self.pop_card_from_list(card_id, game.market)
+        card: Card = self.pop_card_from_list(card_id, self.market)
         return self.play_card(player, field, card)
 
     def pending_to_field(self, player: Player, field_index: int, card_id: str) -> Dict[str, str]:
         '''
         Plays card from pending to field. No confirmation.
         '''
-        field = get_field(player, field_index)
+        field = self.verify_field(player, field_index)
         if field.get('error'):
             return field
         card: Card = self.pop_card_from_list(card_id, player.pending_cards)
@@ -160,7 +160,7 @@ class Game:
             field.add_card(card)
 
         # Move stage forward if playing from hand
-        if not game.stage_index in [0, 1]:
+        if not self.stage_index in [0, 1]:
             self.go_next_stage()
         return util.success('Card successfully played')
 
@@ -240,7 +240,7 @@ class Game:
         player_ranks = sorted(players, key=getattr('coins'), reverse=True)
         self.winner = player_ranks[0].name
 
-    def get_field(player: Player, field_index: int):
+    def verify_field(self, player: Player, field_index: int):
         if field_index not in range(0, len(player.fields)):
             return util.error('Invalid field index')
         if not player.fields[field_index].enabled:

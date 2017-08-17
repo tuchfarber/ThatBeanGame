@@ -3,15 +3,9 @@
     <head>
         <script src="https://unpkg.com/vue"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.4"></script>
+        <link rel="stylesheet" href="css/tbg.css">
         <style>
-            table,th,td{
-                border: 1px solid black;
-                border-collapse: collapse;
-            }
-            html,body{
-                font-size:12px;
-                font-family: monospace
-            }
+
         </style>
     </head>
     <body>
@@ -148,141 +142,6 @@
                 <button v-on:click="drawCardsToMarket()">Draw</button>
             </div>
         </div>
-        <script>
-            content = new Vue({
-                el: "#content",
-                data: {
-                    base_url: "http://localhost:8080",
-                    username:"",
-                    game:"",
-                    deck_size:"",
-                    discard_size:"",
-                    lastresponse: "",
-                    all_data:{},
-                    player_info:{}
-                },
-                methods:{
-                    createGame: function(){
-                        this.$http.post(
-                            this.base_url + '/create', 
-                            {"name":this.username}
-                        )
-                        .then(response => {
-                            this.game = response.body.game;
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body))
-                        });
-                    },
-                    joinGame: function(){
-                        this.$http.post(
-                            this.base_url + '/login', 
-                            {"name":this.username, "game":this.game}
-                        )
-                        .then(response => {
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    },
-                    startGame: function(){
-                        this.$http.post(
-                            this.base_url + '/game/' + this.game + '/start'
-                        )
-                        .then(response => {
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    },
-                    playCardFromHand: function(field){
-                        this.$http.post(
-                            this.base_url + '/game/' + this.game + '/play/hand',
-                            {"field_index": field}
-                        )
-                        .then(response => {
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    },
-                    playCardFromMarket: function(card_id, field){
-                        this.$http.post(
-                            this.base_url + '/game/' + this.game + '/play/market',
-                            {"field_index": field, "card_id": card_id}
-                        )
-                        .then(response => {
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    },
-                    playCardFromPending: function(card_id, field){
-                        this.$http.post(
-                            this.base_url + '/game/' + this.game + '/play/pending',
-                            {"field_index": field, "card_id": card_id}
-                        )
-                        .then(response => {
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    },
-                    drawCardsToMarket: function(){
-                        this.$http.post(
-                            this.base_url + '/game/' + this.game + '/draw/market'
-                        )
-                        .then(response => {
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    },
-                    drawCardsToHand: function(){
-                        this.$http.post(
-                            this.base_url + '/game/' + this.game + '/draw/hand'
-                        )
-                        .then(response => {
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    },
-                    update: function(){
-                        this.$http.get(
-                            this.base_url + '/game/' + this.game
-                        )
-                        .then(response => {
-                            this.all_data = response.body;
-                            this.player_info = this.all_data.player_info;
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    },
-                    createTrade: function(ids, other_players, wants){
-                        this.$http.post(
-                            this.base_url + '/game/' + this.game + '/trade/create',
-                            {"card_ids":ids, "other_player":other_players, "wants":wants}
-                        )
-                        .then(response => {
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    },
-                    acceptTrade: function(trade_id, card_ids){
-                        this.$http.post(
-                            this.base_url + '/game/' + this.game + '/trade/accept',
-                            {"trade_id":trade_id, "card_ids":card_ids}
-                        )
-                        .then(response => {
-                            this.update()
-                        }, response => {
-                            alert(JSON.stringify(response.body.error))
-                        });
-                    }
-                }
-            })
-        </script>
+        <script src="js/tbg.js"></script>
     </body>
 </html>
