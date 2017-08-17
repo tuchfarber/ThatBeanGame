@@ -102,33 +102,6 @@ class Game:
     def add_to_market(self, cards: List[Card]):
         self.market += cards
 
-    @check_stage((0,1))
-    @check_turn
-    @check_pending
-    def hand_to_field(self, player: Player, field_index: int) -> Dict[str, str]:
-        '''
-        Plays card from users hand to field. No confirmation.
-        '''
-        result: Dict = self.play_card(player, field_index)
-        return result
-
-    @check_stage((3,))
-    @check_turn
-    @check_pending
-    def market_to_field(self, player: Player, field_index: int, card_id: str) -> Dict[str, str]:
-        '''
-        Plays card from market to field. No confirmation.
-        '''
-        result: Dict = self.play_card(player, field_index, card_id)
-        return result
-
-    def pending_to_field(self, player: Player, field_index: int, card_id: str) -> Dict[str, str]:
-        '''
-        Plays card from pending to field. No confirmation.
-        '''
-        result: Dict = self.play_card(player, field_index, card_id)
-        return result
-
     @check_stage((3,))
     @check_turn
     @check_pending
@@ -139,6 +112,57 @@ class Game:
         self.go_next_stage()
         self.go_next_player()
         return util.success('Successfully drew two cards for hand')
+
+    @check_stage((0,1))
+    @check_turn
+    @check_pending
+    def hand_to_field(self, player: Player, field_index: int) -> Dict[str, str]:
+        '''
+        Plays card from users hand to field. No confirmation.
+        '''
+        field = get_field(player, field_index)
+        if field.get('error'):
+            return field
+        card: Card = player.hand[0]
+        player.hand = player.hand[1:]
+        return self.play_card(player, field, card)
+
+    @check_stage((3,))
+    @check_turn
+    @check_pending
+    def market_to_field(self, player: Player, field_index: int, card_id: str) -> Dict[str, str]:
+        '''
+        Plays card from market to field. No confirmation.
+        '''
+        field = get_field(player, field_index)
+        if field.get('error'):
+            return field
+        card: Card = self.pop_card_from_list(card_id, game.market)
+        return self.play_card(player, field, card)
+
+    def pending_to_field(self, player: Player, field_index: int, card_id: str) -> Dict[str, str]:
+        '''
+        Plays card from pending to field. No confirmation.
+        '''
+        field = get_field(player, field_index)
+        if field.get('error'):
+            return field
+        card: Card = self.pop_card_from_list(card_id, player.pending_cards)
+        return self.play_card(player, field, card)
+
+    def play_card(self, player: Player, field: Field, card: Card) -> Dict[str, str]:
+        '''
+        Plays card from anywhere
+        '''
+        # Add card to field, if fails, cash in and try again
+        if not field.add_card(card):
+            self.cash_in(field, player)
+            field.add_card(card)
+
+        # Move stage forward if playing from hand
+        if not game.stage_index in [0, 1]:
+            self.go_next_stage()
+        return util.success('Card successfully played')
 
     @check_stage((3,))
     def create_trade(self, p1: Player, p2_name: str, card_ids: List[str], wants: List[str]):
@@ -167,39 +191,6 @@ class Game:
         if not result.get('error'):
             self.trades = [trade for trade in self.trades if trade.id != trade_id]
         return result
-
-    def play_card(self, player: Player, field_index: int, card_id: str='') -> Dict[str, str]:
-        '''
-        Plays card from anywhere
-        '''
-        if field_index not in range(0, len(player.fields)):
-            return util.error('Invalid field index')
-        if not player.fields[field_index].enabled:
-            return util.error('Field not yet bought')
-
-        pending: Card = self.pop_card_from_list(card_id, player.pending_cards)
-        market: Card = self.pop_card_from_list(card_id, self.market)
-        hand: Card = player.hand[0]
-
-        card: Card = pending or market
-        if not card:
-            if card_id:
-                return util.error("Incorrect card id")
-            else:
-                card = hand
-                player.hand = player.hand[1:]
-        
-        field: Field = player.fields[field_index] 
-        
-        # Add card to field, if fails, cash in and try again
-        if not field.add_card(card):
-            self.cash_in(field, player)
-            field.add_card(card)
-
-        # Move stage forward if playing from hand
-        if not card_id:
-            self.go_next_stage()
-        return util.success('Card successfully played')
 
     def go_next_stage(self) -> None:
         self.stage_index = (self.stage_index + 1) % len(constants.STAGES)
@@ -248,6 +239,13 @@ class Game:
         
         player_ranks = sorted(players, key=getattr('coins'), reverse=True)
         self.winner = player_ranks[0].name
+
+    def get_field(player: Player, field_index: int):
+        if field_index not in range(0, len(player.fields)):
+            return util.error('Invalid field index')
+        if not player.fields[field_index].enabled:
+            return util.error('Field not yet bought')
+        return player.fields[field_index]
 
     def ids_to_tcs(self, player: Player, card_ids: List[str]) -> List[TradingCard]:
         '''Call with a player and the ids they want to trade'''
