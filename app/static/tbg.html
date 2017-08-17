@@ -35,6 +35,7 @@
             <div>Stage: {{all_data.stage}}</div>
             <div>Playthrough: {{all_data.playthrough}}</div>
             <div>Status: {{all_data.status}}</div>
+            <div>Trades: {{all_data.trades}}</div>
             <div v-if="all_data.market != undefined">
                 Market: 
                 <table>
@@ -67,6 +68,8 @@
                 
                 <div>Coins: {{all_data.player_info.coins}}</div>
                 <div>Host: {{all_data.player_info.is_host}}</div>
+                {{all_data.player_info.hand}}
+                {{all_data.player_info.pending}}
                 <div>
                     Hand:
                     <table>
@@ -214,6 +217,17 @@
                             alert(JSON.stringify(response.body.error))
                         });
                     },
+                    playCardFromPending: function(card_id, field){
+                        this.$http.post(
+                            this.base_url + '/game/' + this.game + '/play/pending',
+                            {"field_index": field, "card_id": card_id}
+                        )
+                        .then(response => {
+                            this.update()
+                        }, response => {
+                            alert(JSON.stringify(response.body.error))
+                        });
+                    },
                     drawCardsToMarket: function(){
                         this.$http.post(
                             this.base_url + '/game/' + this.game + '/draw/market'
@@ -241,6 +255,28 @@
                         .then(response => {
                             this.all_data = response.body;
                             this.player_info = this.all_data.player_info;
+                        }, response => {
+                            alert(JSON.stringify(response.body.error))
+                        });
+                    },
+                    createTrade: function(ids, other_players, wants){
+                        this.$http.post(
+                            this.base_url + '/game/' + this.game + '/trade/create',
+                            {"card_ids":ids, "other_player":other_players, "wants":wants}
+                        )
+                        .then(response => {
+                            this.update()
+                        }, response => {
+                            alert(JSON.stringify(response.body.error))
+                        });
+                    },
+                    acceptTrade: function(trade_id, card_ids){
+                        this.$http.post(
+                            this.base_url + '/game/' + this.game + '/trade/accept',
+                            {"trade_id":trade_id, "card_ids":card_ids}
+                        )
+                        .then(response => {
+                            this.update()
                         }, response => {
                             alert(JSON.stringify(response.body.error))
                         });

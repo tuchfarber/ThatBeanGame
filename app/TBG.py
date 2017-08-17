@@ -17,7 +17,7 @@ clients: Dict[str, str] = {}
 
 def check_valid_request(f):
     '''Decorator. Verifies game exists and client is authorized. Returns game and client'''
-    def decorate(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         try:
             game: Game = games[kwargs['game_id']]
         except KeyError:
@@ -29,7 +29,7 @@ def check_valid_request(f):
             abort(400, util.error('Not authorized to view game'))
 
         return f(game, player)
-    return decorate
+    return wrapper
 
 
 def error_check(result: Dict) -> Dict:
@@ -162,10 +162,23 @@ def play_card_from_market(game: Game, player: Player) -> Dict:
     '''Places card from market into field'''
     try:
         field_index: int = request.json['field_index']
-        card_id: int = request.json['card_id']
+        card_id: str = request.json['card_id']
     except KeyError:
         abort(400, util.error('Incorrect JSON data'))
     result: Dict = game.market_to_field(player, field_index, card_id)
+    error_check(result)
+    return result
+
+@app.route('/game/<game_id>/play/pending', method='POST')
+@check_valid_request
+def play_card_from_pending(game: Game, player: Player) -> Dict:
+    '''Places card from market into field'''
+    try:
+        card_id: str = request.json['card_id']
+        field_index: int = request.json['field_index']
+    except KeyError:
+        abort(400, util.error('Incorrect JSON data'))
+    result: Dict = game.pending_to_field(player, field_index, card_id)
     error_check(result)
     return result
 
@@ -187,12 +200,12 @@ def draw_for_hand(game: Game, player: Player) -> Dict:
     error_check(result)
     return result
 
-@app.route('/game/<game_id>/trade/create')
+@app.route('/game/<game_id>/trade/create', method='POST')
 @check_valid_request
 def create_trade(game: Game, player: Player) -> Dict:
     '''Creates new trade'''
     try:
-        card_ids: List[int] = request.json['card_ids']
+        card_ids: List[str] = request.json['card_ids']
         other_player_name: str = request.json['other_player']
         wants: List[str] = request.json['wants'] # List of card names
     except KeyError:
@@ -201,7 +214,19 @@ def create_trade(game: Game, player: Player) -> Dict:
     result = game.create_trade(player, other_player_name, card_ids, wants)
     error_check(result)
     return result
-    
+
+@app.route('/game/<game_id>/trade/accept', method='POST')
+@check_valid_request
+def accept_trade(game: Game, player: Player) -> Dict:
+    '''Accepts a trade'''
+    try:
+        trade_id: str = request.json['trade_id']
+        card_ids: List[str] = request.json['card_ids']
+    except KeyError:
+        abort(400, util.error('Incorrect JSON data'))
+    result = game.accept_trade(player, trade_id, card_ids)
+    error_check(result)
+    return result
 
 
 

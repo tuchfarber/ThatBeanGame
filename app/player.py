@@ -40,4 +40,5 @@ class Player:
         '''Returns all private knowledge as dictionary'''
         knowledge: Dict = self.to_dict_public()
         knowledge["hand"] = [card.to_dict() for card in self.hand]
+        knowledge["pending_cards"] = [card.to_dict() for card in self.pending_cards]
         return knowledge

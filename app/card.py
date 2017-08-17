@@ -1,18 +1,18 @@
 import random
 from typing import List, Dict, Tuple
+import uuid
+import constants
 
 
 class Card:
     '''Represents one card in game'''
-    MAX_CARDS: int = 24
-    MIN_CARDS: int = 0
 
-    def __init__(self, name: str, count: int, values: tuple, img_src: str, id: int) -> None:
+    def __init__(self, name: str, count: int, values: tuple, img_src: str) -> None:
         self.name: str = name
         self.count: int = count
         self.values: tuple = values
         self.img_src: str = img_src
-        self.id: int = id
+        self.id: str = str(uuid.uuid4())[:6]
 
     def to_dict(self) -> Dict:
         '''Returns Card as dictionary'''
@@ -33,25 +33,10 @@ class Deck:
 
     def build_deck(self) -> None:
         '''Builds deck from standard cards'''
-        card_types: Tuple[Tuple[str, int, Tuple[int, int, int, int], str], ...] = (
-            ("Cocoa Bean", 4, (Card.MAX_CARDS, 2, 3, 4), "assets/beans/cocoa.jpg"),
-            ("Garden Bean", 6, (Card.MAX_CARDS, 2, 3, Card.MAX_CARDS), "assets/beans/garden.jpg"),
-            ("Red Bean", 8, (2, 3, 4, 5), "assets/beans/red.jpg"),
-            ("Black-eyed Bean", 10, (2, 4, 5, 6), "assets/beans/black-eyed.jpg"),
-            ("Soy Bean", 12, (2, 4, 6, 7), "assets/beans/soy.jpg"),
-            ("Green Bean", 14, (3, 5, 6, 7), "assets/beans/green.jpg"),
-            ("Stink Bean", 16, (3, 5, 7, 8), "assets/beans/stink.jpg"),
-            ("Chili Bean", 18, (3, 6, 8, 9), "assets/beans/chili.jpg"),
-            ("Blue Bean", 20, (4, 5, 8, 10), "assets/beans/blue.jpg"),
-            ("Wax Bean", 22, (4, 7, 9, 11), "assets/beans/wax.jpg"),
-            ("Coffee Bean", 24, (4, 7, 10, 12), "assets/beans/coffee.jpg")
-        )
-        card_id: int = 1
-        for card_type in card_types:
+        for card_type in constants.CARD_TYPES:
             for _ in range(card_type[1]):
-                new_card: Card = Card(*card_type, card_id)
+                new_card: Card = Card(*card_type)
                 self.cards.append(new_card)
-                card_id += 1
 
     def pop(self) -> Card:
         card: Card = self.cards[-1]
@@ -114,7 +99,7 @@ class Field:
             list(range(first_card.values[0], first_card.values[1])),
             list(range(first_card.values[1], first_card.values[2])),
             list(range(first_card.values[2], first_card.values[3])),
-            list(range(first_card.values[3], Card.MAX_CARDS))
+            list(range(first_card.values[3], constants.MAX_CARDS))
         )
         for value, value_range in enumerate(value_ranges):
             if len(self.cards) in value_range:
