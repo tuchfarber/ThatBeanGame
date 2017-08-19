@@ -78,7 +78,7 @@ class Game:
     def retrieve_game(self, player: Player) -> Dict:
         return {
             'player_info': player.to_dict_private(),
-            'players': [other_player.to_dict_public() for other_player in self.players],
+            'players': [other_player.to_dict_public() for other_player in self.players if other_player != player],
             'deck_count': self.deck.get_length(),
             'playthrough': self.playthrough,
             'discard_count': self.discards.get_length(),

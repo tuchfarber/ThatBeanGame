@@ -71,6 +71,8 @@ def access() -> Dict:
         game_id: str = clients[cookie]
     except KeyError:
         abort(400, util.error('Access denied'))
+    if games[game_id].status == 'Completed':
+        abort(400, util.error('Game already completed'))
     return {'game': game_id}
 
 

@@ -1,22 +1,65 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <script src="https://unpkg.com/vue"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.4"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css" />
         <link rel="stylesheet" href="css/tbg.css">
-        <style>
-
-        </style>
     </head>
     <body>
         <div id="content">
-            <h2>Login</h2>
-            <div>
-                <input v-model="username" placeholder="Username"></input>
-                <input v-model="game" placeholder="Game ID"></input>
+            <div id="screen_overlay">
+                <div id="login">
+                    <div>
+                        <h1>ThatBeanGame</h1>
+                        <input v-model="username" type="text" placeholder="Username"></input>
+                        <input v-model="game" type="text" placeholder="Game ID (Optional)"></input>
+                        <button v-on:click="createGame">Create Game</button><button v-on:click="joinGame">Join Game</button>
+                    </div>
+                </div>
             </div>
-            <button v-on:click="createGame">Create Game</button>
-            <button v-on:click="joinGame">Join Game</button>
+            <div class="players">
+                <template v-if="all_data.players != undefined">
+                    <div class="player" v-for="player in all_data.players">
+                        {{player.name}}<br>
+                        <template v-for="field in player.fields" v-if="field.enabled">
+                            {{field.name}}:{{field.count}}
+                        </template>
+                    </div>
+                    <!--
+                    <div>
+                        Players:
+                        <table>
+                            <tr>
+                                <th>Name</th>
+                                <th>Hand Count</th>
+                                <th>Is Host</th>
+                                <th>Coins</th>
+                                <template v-for="index in [1,2,3]">
+                                    <th>Field {{index}} Card</th>
+                                    <th>Field {{index}} Count</th>
+                                    <th>Field {{index}} Enabled</th>
+                                </template>
+                            </tr>
+                            <tr v-for="player in all_data.players">
+                                <td>{{player.name}}</td>
+                                <td>{{player.hand_count}}</td>
+                                <td>{{player.is_host}}</td>
+                                <td>{{player.coins}}</td>
+                                <template v-for="field in player.fields">
+                                    <td>{{field.name}}</td>
+                                    <td>{{field.count}}</td>
+                                    <td>{{field.enabled}}</td>
+                                </template>
+                            </tr>
+                        </table>
+                    </div>-->
+                </template>
+            </div>
+            <!--
             <button v-on:click="startGame">Start Game</button>
             <button v-on:click="update">Update</button>
             <hr>
@@ -140,7 +183,7 @@
             <div>
                 <b>Draw cards to market:</b>
                 <button v-on:click="drawCardsToMarket()">Draw</button>
-            </div>
+            </div>-->
         </div>
         <script src="js/tbg.js"></script>
     </body>

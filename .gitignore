@@ -5,3 +5,5 @@ notes
 .vscode
 venv
 .mypy_cache
+.sass-cache
+*css.map

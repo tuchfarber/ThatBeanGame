@@ -18,7 +18,9 @@ content = new Vue({
             )
             .then(response => {
                 this.game = response.body.game;
-                this.update()
+                this.update();
+                this.hideLogin();
+                window.setInterval(() => this.update(), 2000)
             }, response => {
                 alert(JSON.stringify(response.body))
             });
@@ -29,9 +31,24 @@ content = new Vue({
                 {"name":this.username, "game":this.game}
             )
             .then(response => {
-                this.update()
+                this.update();
+                this.hideLogin();
+                window.setInterval(this.update(), 2000)
             }, response => {
                 alert(JSON.stringify(response.body.error))
+            });
+        },
+        checkAccess: function(){
+            this.$http.get(
+                this.base_url + '/api/access'
+            )
+            .then(response => {
+                this.game = response.body.game;
+                this.update();
+                this.hideLogin();
+                window.setInterval(this.update(), 2000)
+            }, response => {
+                // Do nothing. We are just skipping auto login
             });
         },
         startGame: function(){
@@ -129,6 +146,13 @@ content = new Vue({
             }, response => {
                 alert(JSON.stringify(response.body.error))
             });
+        },
+        hideLogin: function(){
+            document.getElementById("screen_overlay").className += " hidden";
         }
+    },
+    mounted: function(){
+        this.checkAccess()
+        console.log("MOUNTED")
     }
 })
