@@ -57,9 +57,6 @@ def enable_options():
     '''Enables clients to receive okay from OPTIONS request'''
     return
 
-
-
-
 @app.route('/api/access', method='GET')
 def access() -> Dict:
     '''
@@ -88,11 +85,12 @@ def login() -> Dict:
         game_id: str = request.json['game']
     except KeyError:
         abort(400, util.error('Incorrect JSON data'))
-
-    try:
-        game: Game = games[game_id]
-    except KeyError:
-        abort(400, util.error('Game does not exist'))
+    
+    # Get first public game
+    game: Game = util.shrink([games[game_id] for game_id in games if games[game_id].public])
+    # If game game_id isn't a blank string, use that game
+    if game_id in games:
+        game = games[game_id]
 
     if name in [player.name for player in game.players]:
         abort(400, util.error('User already exists with that name'))
@@ -106,7 +104,6 @@ def login() -> Dict:
     response.set_cookie('tbg_token', player.token, max_age=400)
     clients[player.token] = game_id
     return util.success('Successfully logged into game')
-
 
 @app.route('/api/create', method='POST')
 def create_new_game() -> Dict:
@@ -126,7 +123,6 @@ def create_new_game() -> Dict:
     clients[player.token] = game.id
     response.set_cookie('tbg_token', player.token, max_age=400)
     return {'game': game.id}
-
 
 @app.route('/api/game/<game_id>', method='GET')
 @check_valid_request

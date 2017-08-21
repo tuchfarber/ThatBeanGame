@@ -169,15 +169,10 @@ class Game:
     def create_trade(self, p1: Player, p2_name: str, card_ids: List[str], wants: List[str]):
         tcs: List[TradingCard] = self.ids_to_tcs(p1, card_ids)
         new_trades: List[Trade] = []
-        if p2_name:
-            p2: Player = util.shrink([player for player in self.players if player.name == p2_name])
-            if not p2:
-                return util.error("Player chosen is not in game")
-            new_trades += [Trade(p1, p2, tcs, wants)]
-            
-        else:
-            # If p2 is blank, create a global request
-            new_trades += [Trade(p1, _p2, tcs, wants) for _p2 in self.players if _p2 != p1]
+        p2: Player = util.shrink([player for player in self.players if player.name == p2_name])
+        if not p2:
+            return util.error("Player chosen is not in game")
+        new_trades += [Trade(p1, p2, tcs, wants)]
         self.trades += new_trades
         return util.success('Successfully created trade')
 
