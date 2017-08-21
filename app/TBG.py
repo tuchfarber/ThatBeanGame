@@ -115,7 +115,12 @@ def create_new_game() -> Dict:
         player: Player = Player(request.json['name'])
     except KeyError:
         abort(400, util.error('Name not supplied'))
-    game: Game = Game()
+    
+    public: bool = False
+    if 'public' in request.json:
+        public = request.json['public']
+
+    game: Game = Game(public)
     game.add_player(player)
     games[game.id] = game
     clients[player.token] = game.id

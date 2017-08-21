@@ -39,7 +39,7 @@ def check_pending(f):
     return wrapper
 
 class Game:
-    def __init__(self) -> None:
+    def __init__(self, public: bool = True) -> None:
         self.players: List[Player] = []
         self.deck: Deck = Deck()
         self.playthrough: int = 0
@@ -51,6 +51,7 @@ class Game:
         self.market: List[Card] = []
         self.trades: List[Trade] = []
         self.winner = None
+        self.public = public
 
         self.deck.build_deck()
         self.deck.shuffle()
