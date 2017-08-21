@@ -188,6 +188,16 @@ class Game:
             self.trades = [trade for trade in self.trades if trade.id != trade_id]
         return result
 
+    def reject_trade(self, player: Player, trade_id: str):
+        trade: Trade = util.shrink([trade for trade in self.trades if trade.id == trade_id])
+        if not trade:
+            return util.error("Trade does not exist")
+        if player is not trade.p2:
+            return util.error("You are not in this trade")
+        # Remove trade from trades
+        self.trades = [trade for trade in self.trades if trade.id != trade_id]
+        return util.success("Trade successfully rejected")
+
     def go_next_stage(self) -> None:
         self.stage_index = (self.stage_index + 1) % len(constants.STAGES)
 

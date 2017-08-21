@@ -227,6 +227,18 @@ def accept_trade(game: Game, player: Player) -> Dict:
     error_check(result)
     return result
 
+@app.route('/api/game/<game_id>/trade/reject', method='POST')
+@check_valid_request
+def reject_trade(game: Game, player: Player) -> Dict:
+    '''Rejects a trade'''
+    try:
+        trade_id: str = request.json['trade_id']
+    except KeyError:
+        abort(400, util.error('Incorrect JSON data'))
+    result = game.reject_trade(player, trade_id)
+    error_check(result)
+    return result
+
 @app.route('/', method='GET')
 def index():
     '''Returns webpage'''
