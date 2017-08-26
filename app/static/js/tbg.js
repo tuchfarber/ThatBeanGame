@@ -1,7 +1,7 @@
 content = new Vue({
     el: "#content",
     data: {
-        base_url: location.protocol + '//' + window.location.hostname,
+        base_url: location.protocol + '//' + window.location.hostname + ':' + location.port,
         username:"",
         game:"",
         deck_size:"",
