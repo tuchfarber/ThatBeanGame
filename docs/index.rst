@@ -6,6 +6,10 @@
 Welcome to ThatBeanGame's documentation!
 ========================================
 
+ThatBeanGame is a web based version of a popular bean farming game. 
+
+It's written in Python and provides an API for a seperate front end to interact with it. It contains a very basic front-end as a proof of concept.
+
 Contents:
 
 .. toctree::
