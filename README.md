@@ -3,7 +3,7 @@
 
 **To run the game server:**
 1. `make env`
-2. `source env/bin/activate`
+2. `source venv/bin/activate`
 3. `make requirements`
 4. `make run`
 
