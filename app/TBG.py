@@ -6,7 +6,7 @@ import json
 from typing import Dict, List
 
 from player import Player
-from game import Game
+from game import Game, GAME_TYPES
 import util
 
 app = Bottle()
@@ -85,9 +85,10 @@ def login() -> Dict:
         game_id: str = request.json['game']
     except KeyError:
         abort(400, util.error('Incorrect JSON data'))
-    
+
     # Get first public game
-    game: Game = util.shrink([games[game_id] for game_id in games if games[game_id].public])
+    game: Game = util.shrink([games[game_id] for game_id in games if games[game_id].game_type == 'public'])
+
     # If game game_id isn't a blank string, use that game
     if game_id in games:
         game = games[game_id]
@@ -112,12 +113,15 @@ def create_new_game() -> Dict:
         player: Player = Player(request.json['name'])
     except KeyError:
         abort(400, util.error('Name not supplied'))
-    
-    public: bool = False
-    if 'public' in request.json:
-        public = request.json['public']
 
-    game: Game = Game(public)
+    try:
+        if not request.json['game_type'] in GAME_TYPES:
+            abort(400, util.error('Invalid game type parameter'))
+        game_type: str = request.json['game_type']
+    except KeyError:
+        abort(400, util.error('Game type not supplied'))
+
+    game: Game = Game(game_type)
     game.add_player(player)
     games[game.id] = game
     clients[player.token] = game.id
@@ -209,7 +213,7 @@ def create_trade(game: Game, player: Player) -> Dict:
         wants: List[str] = request.json['wants'] # List of card names
     except KeyError:
         abort(400, util.error('Incorrect JSON data'))
-    
+
     result = game.create_trade(player, other_player_name, card_ids, wants)
     error_check(result)
     return result
