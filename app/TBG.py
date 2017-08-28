@@ -70,7 +70,8 @@ def access() -> Dict:
         abort(400, util.error('Access denied'))
     if games[game_id].status == 'Completed':
         abort(400, util.error('Game already completed'))
-    return {'game': game_id}
+    player: Player = util.shrink([player for player in games[game_id].players if player.token == request.get_cookie('tbg_token')])
+    return {'game': game_id, "player_name": player.name}
 
 
 @app.route('/api/login', method='POST')
