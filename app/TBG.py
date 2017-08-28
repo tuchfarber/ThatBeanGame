@@ -6,7 +6,7 @@ import json
 from typing import Dict, List
 
 from player import Player
-from game import Game, GAME_TYPES
+from game import Game
 import util
 
 app = Bottle()
@@ -115,11 +115,11 @@ def create_new_game() -> Dict:
         abort(400, util.error('Name not supplied'))
 
     try:
-        if not request.json['game_type'] in GAME_TYPES:
-            abort(400, util.error('Invalid game type parameter'))
         game_type: str = request.json['game_type']
     except KeyError:
         abort(400, util.error('Game type not supplied'))
+    if game_type not in ('public', 'private'):
+        abort(400, util.error('Invalid game type parameter'))
 
     game: Game = Game(game_type)
     game.add_player(player)

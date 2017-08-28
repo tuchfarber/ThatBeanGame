@@ -38,8 +38,6 @@ def check_pending(f):
         return f(self, *args, **kwargs)
     return wrapper
 
-GAME_TYPES: List[str] = ['public', 'private']
-
 class Game:
     def __init__(self, game_type: str) -> None:
         self.players: List[Player] = []
