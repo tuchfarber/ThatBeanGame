@@ -13,7 +13,7 @@ CARD_TYPES: Tuple[Tuple[str, int, Tuple[int, int, int, int], str], ...] = (
     ("Cocoa Bean", 4, (MAX_CARDS, 2, 3, 4), "assets/beans/cocoa.jpg"),
     ("Garden Bean", 6, (MAX_CARDS, 2, 3, MAX_CARDS), "assets/beans/garden.jpg"),
     ("Red Bean", 8, (2, 3, 4, 5), "assets/beans/red.jpg"),
-    ("Black-eyed Bean", 10, (2, 4, 5, 6), "assets/beans/black-eyed.jpg"),
+    ("Black Bean", 10, (2, 4, 5, 6), "assets/beans/black-eyed.jpg"),
     ("Soy Bean", 12, (2, 4, 6, 7), "assets/beans/soy.jpg"),
     ("Green Bean", 14, (3, 5, 6, 7), "assets/beans/green.jpg"),
     ("Stink Bean", 16, (3, 5, 7, 8), "assets/beans/stink.jpg"),
