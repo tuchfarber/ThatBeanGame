@@ -200,10 +200,10 @@ class Game:
 
     def go_next_stage(self) -> None:
         self.stage_index = (self.stage_index + 1) % len(constants.STAGES)
-        current_player = self.player[self.current_player_index]
+        current_player = self.players[self.current_player_index]
         # If the player has an empty hand and is expected to play from hand, skip to next phase.
         if not current_player.hand and self.stage_index in ['First Card', 'Second Card']:
-            go_next_stage()
+            self.go_next_stage()
         return
 
     def go_next_player(self) -> None:
