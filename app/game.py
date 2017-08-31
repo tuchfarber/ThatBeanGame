@@ -29,7 +29,7 @@ def check_turn(f):
 
 def check_pending(f):
     '''
-    Checks that a player has no cards in pending. 
+    Checks that a player has no cards in pending.
     NOTE: This must always follow a check_turn to verify that current player is requesting player
     '''
     def wrapper(self, *args, **kwargs):
@@ -39,7 +39,7 @@ def check_pending(f):
     return wrapper
 
 class Game:
-    def __init__(self, public: bool = True) -> None:
+    def __init__(self, game_type: str) -> None:
         self.players: List[Player] = []
         self.deck: Deck = Deck()
         self.playthrough: int = 0
@@ -51,7 +51,7 @@ class Game:
         self.market: List[Card] = []
         self.trades: List[Trade] = []
         self.winner = None
-        self.public = public
+        self.game_type = game_type
 
         self.deck.build_deck()
         self.deck.shuffle()
@@ -87,7 +87,7 @@ class Game:
             'status': self.status,
             'game_id': self.id,
             'stage': constants.STAGES[self.stage_index],
-            'market': self.market_to_dict(), 
+            'market': self.market_to_dict(),
             'trades': [trade.to_public_dict() for trade in self.trades]
         }
 
@@ -238,7 +238,7 @@ class Game:
                 self.deck.cards = self.discards.take_all()
                 self.deck.shuffle()
             cards.append(self.deck.pop())
-        return cards 
+        return cards
 
     def end_game(self):
         '''End the game'''
@@ -247,7 +247,7 @@ class Game:
         for player in game.players:
             for field in player.fields:
                 self.cash_in(field, player)
-        
+
         player_ranks = sorted(players, key=getattr('coins'), reverse=True)
         self.winner = player_ranks[0].name
 
