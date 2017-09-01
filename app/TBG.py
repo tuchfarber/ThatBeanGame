@@ -4,6 +4,7 @@ from geventwebsocket.handler import WebSocketHandler
 from functools import wraps
 import json
 from typing import Dict, List
+import os
 
 from flask import Flask, request, abort, jsonify, make_response
 
@@ -17,6 +18,7 @@ app = Flask(__name__)
 games: Dict[str, Game] = {}
 clients: Dict[str, str] = {}
 
+CLIENT_ORIGIN = os.environ['TBG_CLIENT_ORIGIN']
 
 def check_valid_request(f):
     '''Decorator. Verifies game exists and client is authorized. Returns game and client'''
@@ -51,7 +53,9 @@ def error400(err):
 @app.after_request
 def enable_cors(response):
     '''Verifies server responds to all requests'''
-    response.headers['Access-Control-Allow-Origin'] = 'http://playground.home:8000'
+    
+    
+    response.headers['Access-Control-Allow-Origin'] = CLIENT_ORIGIN
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token, user-agent'
