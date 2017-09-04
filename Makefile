@@ -17,3 +17,12 @@ format: ## Auto-format to PEP8
 
 env: ## Build virtual environment
 	virtualenv -p `which python3.6` venv
+
+api_doc: ## Builds API doc from TBG.py
+	python ./docs/api_doc_builder.py
+
+run: ## Run server
+	@echo "For cross origin to work correctly make sure to set environment variable TBG_CLIENT_ORIGIN to your client's domain and port (e.g export TBG_CLIENT_ORIGIN='http://example.com:9091')"
+	python -m py_compile app/*.py
+	mypy --ignore-missing-imports  app/TBG.py 
+	python app/TBG.py
