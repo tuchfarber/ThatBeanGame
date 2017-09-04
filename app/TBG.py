@@ -1,11 +1,12 @@
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError
 from geventwebsocket.handler import WebSocketHandler
+from flask_sockets import Sockets
 from functools import wraps
 import json
 from typing import Dict, List
 import os
-
+from time import sleep
 from flask import Flask, request, abort, jsonify, make_response
 
 from player import Player
@@ -14,11 +15,49 @@ import util
 
 #app = Bottle()
 app = Flask(__name__)
+sockets = Sockets(app)
 
 games: Dict[str, Game] = {}
 clients: Dict[str, str] = {}
 
 CLIENT_ORIGIN = os.environ['TBG_CLIENT_ORIGIN']
+
+@sockets.route('/api/updates')
+def echo_socket(ws):
+    '''Socket connection must start with sending of cookie and game_id (e.g. '{"game":"2i34hd","token":"xxxxxxxx"}')'''
+    while not ws.closed:
+        try:
+            user_info: Dict = json.loads(ws.receive())
+        except JSONDecodeError:
+            ws.send('Socket connection must start with sending of token (cookie) and game (id) in JSON format')
+            return
+
+        try:
+            game: Game = games[user_info['game']]
+        except KeyError:
+            ws.send('Game does not exist or no game id sent')
+            return
+
+        try:
+            player: Player = [player for player in game.players if player.token == user_info['token']][0]
+        except KeyError:
+            ws.send('No token data sent')
+            return
+        except IndexError:
+            ws.send('Player does not exist')
+            return
+
+        print('Game: {}'.format(game.id))
+        print('Player: {}'.format(player.name))
+        while True:
+            ws.send(game.retrieve_game(player))
+            #if player.update_available:
+            #    new = game.retrieve_game(player)
+            sleep(3)
+        
+        message = ws.receive()
+        print(message)
+        ws.send(message)
 
 def check_valid_request(f):
     '''Decorator. Verifies game exists and client is authorized. Returns game and client'''
