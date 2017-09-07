@@ -4,10 +4,13 @@ from geventwebsocket.handler import WebSocketHandler
 from flask_sockets import Sockets
 from functools import wraps
 import json
+from json.decoder import JSONDecodeError
 from typing import Dict, List
 import os
 from time import sleep
 from flask import Flask, request, abort, jsonify, make_response
+import jsonpatch
+from flask_socketio import SocketIO
 
 from player import Player
 from game import Game
@@ -15,49 +18,34 @@ import util
 
 #app = Bottle()
 app = Flask(__name__)
-sockets = Sockets(app)
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
 
 games: Dict[str, Game] = {}
 clients: Dict[str, str] = {}
 
-CLIENT_ORIGIN = os.environ['TBG_CLIENT_ORIGIN']
+if 'TBG_CLIENT_ORIGIN' in os.environ:
+    CLIENT_ORIGIN = os.environ['TBG_CLIENT_ORIGIN']
 
-@sockets.route('/api/updates')
-def echo_socket(ws):
-    '''Socket connection must start with sending of cookie and game_id (e.g. '{"game":"2i34hd","token":"xxxxxxxx"}')'''
-    while not ws.closed:
-        try:
-            user_info: Dict = json.loads(ws.receive())
-        except JSONDecodeError:
-            ws.send('Socket connection must start with sending of token (cookie) and game (id) in JSON format')
-            return
+def on_update(room, update):
+    socketio.emit('update_diff', update, room=room)
 
-        try:
-            game: Game = games[user_info['game']]
-        except KeyError:
-            ws.send('Game does not exist or no game id sent')
-            return
-
-        try:
-            player: Player = [player for player in game.players if player.token == user_info['token']][0]
-        except KeyError:
-            ws.send('No token data sent')
-            return
-        except IndexError:
-            ws.send('Player does not exist')
-            return
-
-        print('Game: {}'.format(game.id))
-        print('Player: {}'.format(player.name))
-        while True:
-            ws.send(game.retrieve_game(player))
-            #if player.update_available:
-            #    new = game.retrieve_game(player)
-            sleep(3)
-        
-        message = ws.receive()
-        print(message)
-        ws.send(message)
+@socketio.on('login', namespace='/api/updates')
+def on_login(login_info):
+    print("FUUUUUCK")
+    try:
+        game: Game = games[login_info['game']]
+        player: str = [player for player in game.players if player.token == login_info['game']][0]
+    except KeyError:
+        socketio.emit('error', 'Socket connection must start with sending of token (cookie) and game (id) in JSON format')
+        return
+    except IndexError:
+        socketio.emit('error', 'User does not exist')
+        return
+    print('Game: {}'.format(game.id))
+    print('Player: {}'.format(player.name))
+    socketio.emit('update', json.dumps(game.retrieve_game(player)))
+    join_room('{};{}'.format(game.id,player.name))
 
 def check_valid_request(f):
     '''Decorator. Verifies game exists and client is authorized. Returns game and client'''
@@ -74,6 +62,22 @@ def check_valid_request(f):
             abort(400, util.error('Not authorized to view game'))
 
         return f(game, player)
+    return wrapper
+
+def update_client(f):
+    '''Decorator which updates client after move is made'''
+
+    def wrapper(*args, **kwargs):
+        game = args[0]
+        player = args[1]
+        pre_move_infos = [game.retrieve_game(player) for player in game.players]
+        result = f(*args, **kwargs)
+        post_move_infos = [game.retrieve_game(player) for player in game.players]
+        patch_infos = [jsonpatch.make_patch(pre, post) for (pre,post) in zip(pre_move_infos, post_move_infos)]
+        for (index, player) in enumerate(game.players):
+            room = '{}:{}'.format(game.id, player.name)
+            on_update(room, patch_infos[index])
+        return result
     return wrapper
 
 
@@ -93,8 +97,8 @@ def error400(err):
 def enable_cors(response):
     '''Verifies server responds to all requests'''
     
-    
-    response.headers['Access-Control-Allow-Origin'] = CLIENT_ORIGIN
+    if CLIENT_ORIGIN:
+        response.headers['Access-Control-Allow-Origin'] = CLIENT_ORIGIN
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token, user-agent'
@@ -186,6 +190,7 @@ def game_status(game: Game, player: Player) -> Dict:
 
 @app.route('/api/game/<game_id>/start', methods=['POST'])
 @check_valid_request
+@update_client
 def start_game(game: Game, player: Player) -> Dict:
     '''Starts requested game if user is host'''
     result: Dict = game.start_game(player)
@@ -297,5 +302,6 @@ def reject_trade(game: Game, player: Player) -> Dict:
     return jsonify(result)
 
 print("Server starting...")
-server = WSGIServer(('0.0.0.0', 8080), app, handler_class=WebSocketHandler)
-server.serve_forever()
+socketio.run(app, '0.0.0.0', 8080)
+#server = WSGIServer(('0.0.0.0', 8080), app, handler_class=WebSocketHandler)
+#server.serve_forever()
