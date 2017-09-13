@@ -14,7 +14,8 @@ class Player:
         self.is_host: bool = False
         self.token: str = str(uuid.uuid4())
         self.pending_cards: List[Card] = []
-        self.socket_sid = ""
+        self.socket_sid: str = ""
+        self.last_update: Dict = {}
 
         # Create 3 fields
         self.fields.append(Field(True))

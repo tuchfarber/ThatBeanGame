@@ -1,7 +1,3 @@
-from gevent.pywsgi import WSGIServer
-from geventwebsocket import WebSocketError
-from geventwebsocket.handler import WebSocketHandler
-from flask_sockets import Sockets
 from functools import wraps
 import json
 from json.decoder import JSONDecodeError
@@ -16,7 +12,6 @@ from player import Player
 from game import Game
 import util
 
-#app = Bottle()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
@@ -27,13 +22,7 @@ clients: Dict[str, str] = {}
 if 'TBG_CLIENT_ORIGIN' in os.environ:
     CLIENT_ORIGIN = os.environ['TBG_CLIENT_ORIGIN']
 
-def on_update(room, update):
-    socketio.emit('update_diff', update, room=room)
-
-def prin(msg):
-    print(msg)
-
-@socketio.on('login', namespace='/api/updates')
+@socketio.on('login')
 def on_login(login_info):
     try:
         game: Game = games[login_info['game']]
@@ -45,12 +34,7 @@ def on_login(login_info):
         socketio.emit('error', 'User does not exist')
         return
     player.socket_sid = request.sid
-    print('Game: {}'.format(game.id))
-    print('Player: {}'.format(player.name))
-    print(player.socket_sid)
-    return json.dumps(game.retrieve_game(player))
-    #socketio.emit('my update', json.dumps({'a':'b'}), callback=prin)
-    #socketio.emit('my update', json.dumps(game.retrieve_game(player)), room=player.socket_sid)
+    socketio.emit('client full', json.dumps(game.retrieve_game(player)), room=player.socket_sid)
 
 def check_valid_request(f):
     '''Decorator. Verifies game exists and client is authorized. Returns game and client'''
@@ -69,22 +53,11 @@ def check_valid_request(f):
         return f(game, player)
     return wrapper
 
-def update_client(f):
-    '''Decorator which updates client after move is made'''
-
-    def wrapper(*args, **kwargs):
-        game = args[0]
-        player = args[1]
-        pre_move_infos = [game.retrieve_game(player) for player in game.players]
-        result = f(*args, **kwargs)
-        post_move_infos = [game.retrieve_game(player) for player in game.players]
-        patch_infos = [jsonpatch.make_patch(pre, post) for (pre,post) in zip(pre_move_infos, post_move_infos)]
-        for (index, player) in enumerate(game.players):
-            room = '{}:{}'.format(game.id, player.name)
-            on_update(room, patch_infos[index])
-        return result
-    return wrapper
-
+def update_client(game):
+    for player in game.players:
+        update = game.retrieve_game(player)
+        patch = jsonpatch.make_patch(player.last_update, update)
+        socketio.emit('client update', patch.to_string(), room=player.socket_sid)
 
 def error_check(result: Dict) -> Dict:
     '''Aborts with 400 if result is error'''
@@ -158,6 +131,7 @@ def login() -> Dict:
     clients[player.token] = game_id
     response = make_response(jsonify(util.success('Successfully logged into game')))
     response.set_cookie('tbg_token', player.token, max_age=3600)
+    update_client(game)
     return response
 
 @app.route('/api/create', methods=['POST'])
@@ -195,11 +169,11 @@ def game_status(game: Game, player: Player) -> Dict:
 
 @app.route('/api/game/<game_id>/start', methods=['POST'])
 @check_valid_request
-@update_client
 def start_game(game: Game, player: Player) -> Dict:
     '''Starts requested game if user is host'''
     result: Dict = game.start_game(player)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 
@@ -214,6 +188,7 @@ def play_card_from_hand(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result: Dict = game.hand_to_field(player, field_index)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 
@@ -229,6 +204,7 @@ def play_card_from_market(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result: Dict = game.market_to_field(player, field_index, card_id)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 @app.route('/api/game/<game_id>/play/pending', methods=['POST'])
@@ -243,6 +219,7 @@ def play_card_from_pending(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result: Dict = game.pending_to_field(player, field_index, card_id)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 
@@ -252,6 +229,7 @@ def draw_for_market(game: Game, player: Player) -> Dict:
     '''Draws two cards and places them in market'''
     result: Dict = game.deck_to_market(player)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 
@@ -261,6 +239,7 @@ def draw_for_hand(game: Game, player: Player) -> Dict:
     '''Draws three cards and places them in players hand'''
     result: Dict = game.deck_to_hand(player)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 @app.route('/api/game/<game_id>/trade/create', methods=['POST'])
@@ -277,6 +256,7 @@ def create_trade(game: Game, player: Player) -> Dict:
 
     result = game.create_trade(player, other_player_name, card_ids, wants)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 @app.route('/api/game/<game_id>/trade/accept', methods=['POST'])
@@ -291,6 +271,7 @@ def accept_trade(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result = game.accept_trade(player, trade_id, card_ids)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 @app.route('/api/game/<game_id>/trade/reject', methods=['POST'])
@@ -304,9 +285,8 @@ def reject_trade(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result = game.reject_trade(player, trade_id)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 print("Server starting...")
 socketio.run(app, '0.0.0.0', 8080)
-#server = WSGIServer(('0.0.0.0', 8080), app, handler_class=WebSocketHandler)
-#server.serve_forever()

@@ -205,19 +205,12 @@ content = new Vue({
             });
         },
         socketConnect: function(){
-            this.socket = io('http://localhost/api/updates');
-            this.socket.on('connect', () => {
-                this.socket.emit('my event', {data: 'I\'m connected!'});
-            });
-
-            this.socket.on('connection', function(socket){
-                console.log('a user connected');
-            });
-            this.socket.on('my update', (data) => {console.log('JSJSJSJ');console.log(data)});
-            this.socket.on('error', (data) => {console.log(data)});
+            this.socket = io('http://localhost:8080');
+            this.socket.on('client full', (data) => {console.log(data)});
+            this.socket.on('client update', (data) => {console.log(data)})
             obj = {'game':content.game, 'token':getCookie('tbg_token')}
             this.socket.emit('login', obj)        
-        }
+        },
     },
     mounted: function(){
         this.checkAccess()
