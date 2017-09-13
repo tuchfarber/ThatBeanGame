@@ -41,7 +41,6 @@ content = new Vue({
                 withCredentials: true
             })
             .then(response => {
-                this.game = response.data.game;
                 this.update();
             })
             .catch(error => {

@@ -58,6 +58,7 @@ def update_client(game):
         update = game.retrieve_game(player)
         patch = jsonpatch.make_patch(player.last_update, update)
         socketio.emit('client update', patch.to_string(), room=player.socket_sid)
+        player.last_update = update
 
 def error_check(result: Dict) -> Dict:
     '''Aborts with 400 if result is error'''
