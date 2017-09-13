@@ -205,13 +205,30 @@ content = new Vue({
             });
         },
         socketConnect: function(){
-            this.socket = io.connect(this.base_url + '/api/updates');
+            this.socket = io('http://localhost/api/updates');
             this.socket.on('connect', () => {
                 this.socket.emit('my event', {data: 'I\'m connected!'});
             });
+
+            this.socket.on('connection', function(socket){
+                console.log('a user connected');
+            });
+            this.socket.on('my update', (data) => {console.log('JSJSJSJ');console.log(data)});
+            this.socket.on('error', (data) => {console.log(data)});
+            obj = {'game':content.game, 'token':getCookie('tbg_token')}
+            this.socket.emit('login', obj)        
         }
     },
     mounted: function(){
         this.checkAccess()
     }
 })
+function getCookie(key){
+    cookies = document.cookie.split(';');
+    for (index in cookies){
+        cookie = cookies[index]
+        if(cookie.indexOf(key)>-1){
+            return cookie.split('=')[1];
+        }
+    }
+}

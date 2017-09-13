@@ -13,6 +13,10 @@ format: ## Auto-format to PEP8
 env: ## Build virtual environment
 	virtualenv -p `which python3.6` venv
 
+docker: ## Run docker version interactively
+	docker build -t tuchfarber/thatbeangame_dev .
+	docker run -it -p 8080:8080 -e TBG_CLIENT_ORIGIN="http://localhost:8000" tuchfarber/thatbeangame_dev
+
 api_doc: ## Builds API doc from TBG.py
 	python ./docs/api_doc_builder.py
 

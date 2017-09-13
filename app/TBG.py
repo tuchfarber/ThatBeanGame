@@ -10,7 +10,7 @@ import os
 from time import sleep
 from flask import Flask, request, abort, jsonify, make_response
 import jsonpatch
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room
 
 from player import Player
 from game import Game
@@ -30,22 +30,27 @@ if 'TBG_CLIENT_ORIGIN' in os.environ:
 def on_update(room, update):
     socketio.emit('update_diff', update, room=room)
 
+def prin(msg):
+    print(msg)
+
 @socketio.on('login', namespace='/api/updates')
 def on_login(login_info):
-    print("FUUUUUCK")
     try:
         game: Game = games[login_info['game']]
-        player: str = [player for player in game.players if player.token == login_info['game']][0]
+        player: Player = [player for player in game.players if player.token == login_info['token']][0]
     except KeyError:
         socketio.emit('error', 'Socket connection must start with sending of token (cookie) and game (id) in JSON format')
         return
     except IndexError:
         socketio.emit('error', 'User does not exist')
         return
+    player.socket_sid = request.sid
     print('Game: {}'.format(game.id))
     print('Player: {}'.format(player.name))
-    socketio.emit('update', json.dumps(game.retrieve_game(player)))
-    join_room('{};{}'.format(game.id,player.name))
+    print(player.socket_sid)
+    return json.dumps(game.retrieve_game(player))
+    #socketio.emit('my update', json.dumps({'a':'b'}), callback=prin)
+    #socketio.emit('my update', json.dumps(game.retrieve_game(player)), room=player.socket_sid)
 
 def check_valid_request(f):
     '''Decorator. Verifies game exists and client is authorized. Returns game and client'''
@@ -152,7 +157,7 @@ def login() -> Dict:
     game.add_player(player)
     clients[player.token] = game_id
     response = make_response(jsonify(util.success('Successfully logged into game')))
-    response.set_cookie('tbg_token', player.token, max_age=400)
+    response.set_cookie('tbg_token', player.token, max_age=3600)
     return response
 
 @app.route('/api/create', methods=['POST'])
