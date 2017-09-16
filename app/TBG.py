@@ -131,7 +131,7 @@ def login() -> Dict:
     game.add_player(player)
     clients[player.token] = game_id
     response = make_response(jsonify(util.success('Successfully logged into game')))
-    response.set_cookie('tbg_token', player.token, max_age=3600)
+    response.set_cookie('tbg_token', player.token, max_age=6000)
     update_client(game)
     return response
 
@@ -156,7 +156,7 @@ def create_new_game():
     games[game.id] = game
     clients[player.token] = game.id
     response = make_response(jsonify({'game': game.id}))
-    response.set_cookie('tbg_token', player.token, max_age=400)
+    response.set_cookie('tbg_token', player.token, max_age=6000)
     return response
 
 @app.route('/api/game/<game_id>', methods=['GET'])

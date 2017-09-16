@@ -30,8 +30,9 @@ Currently the game will run and allows the following:
 * Display player hand
 * Display all players fields and points
 * Trading
+* WebSocket updates
 
 ### TODO
-* Implement websocket updates
+* Buy third field
 * Implement audio/video chat in app
 * Game cleanup after game ends

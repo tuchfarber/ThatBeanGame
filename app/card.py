@@ -67,24 +67,40 @@ class Field:
 
     def to_dict(self) -> Dict:
         '''Returns card as dictionary'''
-        name: str = "Empty"
-        if self.cards:
-            name = self.get_name()
         return {
-            "name": name,
+            "name": self.name,
+            "img": self.image,
+            "values": self.values,
             "count": len(self.cards),
             "enabled": self.enabled
         }
 
-    def get_name(self) -> str:
+    @property
+    def name(self) -> str:
         try:
             name = self.cards[0].name
         except IndexError:
-            name = None
+            name = 'Empty'
         return name
 
+    @property
+    def image(self) -> str:
+        try:
+            img = self.cards[0].img_src
+        except IndexError:
+            img = ''
+        return img
+
+    @property
+    def values(self) -> Tuple:
+        try:
+            values = self.cards[0].values
+        except IndexError:
+            values = ()
+        return values
+
     def add_card(self, card: Card) -> bool:
-        if card.name != self.get_name() and self.get_name():
+        if card.name != self.name and self.name != 'Empty':
             return False
         self.cards.append(card)
         return True

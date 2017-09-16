@@ -159,7 +159,8 @@ class Game:
         # Add card to field, if fails, cash in and try again
         if not field.add_card(card):
             self.cash_in(field, player)
-            field.add_card(card)
+            if not field.add_card(card):
+                return util.error("Cannot add card to field")
 
         # Move stage forward if playing from hand
         if self.stage_index in (0, 1):
@@ -230,6 +231,7 @@ class Game:
     def draw_cards(self, card_count: int) -> List[Card]:
         '''Draws card for user and shuffles if necessary'''
         cards: List[Card] = []
+        #TODO There is a bug in here at end game. Fix it.
         for i in range(card_count):
             if self.deck.get_length() == 0:
                 if self.playthrough == 2:
@@ -244,12 +246,12 @@ class Game:
     def end_game(self):
         '''End the game'''
         # Make game completed
-        game.status = "Completed"
-        for player in game.players:
+        self.status = "Completed"
+        for player in self.players:
             for field in player.fields:
                 self.cash_in(field, player)
 
-        player_ranks = sorted(players, key=getattr('coins'), reverse=True)
+        player_ranks = sorted(self.players, key=getattr('coins'), reverse=True)
         self.winner = player_ranks[0].name
 
     def verify_field(self, player: Player, field_index: int):
