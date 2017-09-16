@@ -92,7 +92,8 @@ class Game:
             'game_id': self.id,
             'stage': constants.STAGES[self.stage_index],
             'market': self.market_to_dict(),
-            'trades': [trade.to_public_dict() for trade in self.trades]
+            'trades': [trade.to_public_dict() for trade in self.trades],
+            'game_type': self.game_type
         }
 
     @check_stage((1, 2))
@@ -202,7 +203,7 @@ class Game:
         self.stage_index = (self.stage_index + 1) % len(constants.STAGES)
         current_player = self.players[self.current_player_index]
         # If the player has an empty hand and is expected to play from hand, skip to next phase.
-        if not current_player.hand and self.stage_index in ['First Card', 'Second Card']:
+        if not current_player.hand and self.stage_index in (0, 1):
             self.go_next_stage()
         return
 
