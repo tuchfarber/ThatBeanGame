@@ -10,12 +10,14 @@
 NOTE: For cross domain clients to work, you will need to set the domain and port of the client to the environment variable `TBG_CLIENT_ORIGIN` prior to executing `make run`.
 For example if your client is hosted at `http://example.com:9000/tbg_client.html`, you will need to run `export TBG_CLIENT_ORIGIN='http://example.com:9000'`.
 
-
 This game is also being automatically built on Docker Hub. To run the docker container, run the following command:
 
 `docker run -d -p 8080:8080 -e TBG_CLIENT_ORIGIN='http://example.com:9000' tuchfarber/thatbeangame`
 
 *Current status*: partially working
+
+## Documentation
+Documentation (including API) can be found at: http://thatbeangame.readthedocs.io
 
 Currently the game will run and allows the following:
 * Creating a game
@@ -28,8 +30,9 @@ Currently the game will run and allows the following:
 * Display player hand
 * Display all players fields and points
 * Trading
+* WebSocket updates
 
 ### TODO
-* Implement websocket updates
+* Buy third field
 * Implement audio/video chat in app
 * Game cleanup after game ends

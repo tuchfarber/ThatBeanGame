@@ -7,20 +7,15 @@ help: ## Display this help message
 requirements: ## Install requirements
 	pip install -r requirements.txt
 
-run: ## Run server
-	@echo "For cross origin to work correctly make sure to set environment variable TBG_CLIENT_ORIGIN"
-ifndef TBG_CLIENT_ORIGIN
-$(error For cross origin to work correctly make sure to set environment variable TBG_CLIENT_ORIGIN to your client's domain and port (e.g export TBG_CLIENT_ORIGIN='http://example.com:9091'))
-endif
-	python -m py_compile app/*.py
-	mypy --ignore-missing-imports  app/TBG.py 
-	python app/TBG.py
-
 format: ## Auto-format to PEP8
 	autopep8 --in-place --aggressive --aggressive app/*.py
 
 env: ## Build virtual environment
 	virtualenv -p `which python3.6` venv
+
+docker: ## Run docker version interactively
+	docker build -t tuchfarber/thatbeangame_dev .
+	docker run -it -p 8080:8080 -e TBG_CLIENT_ORIGIN="http://localhost:8000" tuchfarber/thatbeangame_dev
 
 api_doc: ## Builds API doc from TBG.py
 	python ./docs/api_doc_builder.py

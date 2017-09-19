@@ -1,8 +1,6 @@
 FROM python:3.6-stretch
-ADD Makefile /var/tbg/Makefile
-ADD requirements.txt /var/tbg/requirements.txt
-ADD app /var/tbg/app
+ADD . /var/tbg/
 WORKDIR "/var/tbg/"
-RUN ["pip", "install", "-r", "/var/tbg/requirements.txt"]
+RUN ["pip", "install", "-qr", "/var/tbg/requirements.txt"]
 EXPOSE 8080
 ENTRYPOINT ["make", "run"]

@@ -1,63 +1,40 @@
-from gevent.pywsgi import WSGIServer
-from geventwebsocket import WebSocketError
-from geventwebsocket.handler import WebSocketHandler
-from flask_sockets import Sockets
 from functools import wraps
 import json
+from json.decoder import JSONDecodeError
 from typing import Dict, List
 import os
 from time import sleep
 from flask import Flask, request, abort, jsonify, make_response
+import jsonpatch
+from flask_socketio import SocketIO, join_room
 
 from player import Player
 from game import Game
 import util
 
-#app = Bottle()
 app = Flask(__name__)
-sockets = Sockets(app)
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
 
 games: Dict[str, Game] = {}
 clients: Dict[str, str] = {}
 
-CLIENT_ORIGIN = os.environ['TBG_CLIENT_ORIGIN']
+if 'TBG_CLIENT_ORIGIN' in os.environ:
+    CLIENT_ORIGIN = os.environ['TBG_CLIENT_ORIGIN']
 
-@sockets.route('/api/updates')
-def echo_socket(ws):
-    '''Socket connection must start with sending of cookie and game_id (e.g. '{"game":"2i34hd","token":"xxxxxxxx"}')'''
-    while not ws.closed:
-        try:
-            user_info: Dict = json.loads(ws.receive())
-        except JSONDecodeError:
-            ws.send('Socket connection must start with sending of token (cookie) and game (id) in JSON format')
-            return
-
-        try:
-            game: Game = games[user_info['game']]
-        except KeyError:
-            ws.send('Game does not exist or no game id sent')
-            return
-
-        try:
-            player: Player = [player for player in game.players if player.token == user_info['token']][0]
-        except KeyError:
-            ws.send('No token data sent')
-            return
-        except IndexError:
-            ws.send('Player does not exist')
-            return
-
-        print('Game: {}'.format(game.id))
-        print('Player: {}'.format(player.name))
-        while True:
-            ws.send(game.retrieve_game(player))
-            #if player.update_available:
-            #    new = game.retrieve_game(player)
-            sleep(3)
-        
-        message = ws.receive()
-        print(message)
-        ws.send(message)
+@socketio.on('login')
+def on_login(login_info):
+    try:
+        game: Game = games[login_info['game']]
+        player: Player = [player for player in game.players if player.token == login_info['token']][0]
+    except KeyError:
+        socketio.emit('error', 'Socket connection must start with sending of token (cookie) and game (id) in JSON format')
+        return
+    except IndexError:
+        socketio.emit('error', 'User does not exist')
+        return
+    player.socket_sid = request.sid
+    socketio.emit('client full', json.dumps(game.retrieve_game(player)), room=player.socket_sid)
 
 def check_valid_request(f):
     '''Decorator. Verifies game exists and client is authorized. Returns game and client'''
@@ -76,6 +53,12 @@ def check_valid_request(f):
         return f(game, player)
     return wrapper
 
+def update_client(game):
+    for player in game.players:
+        update = game.retrieve_game(player)
+        patch = jsonpatch.make_patch(player.last_update, update)
+        socketio.emit('client update', patch.to_string(), room=player.socket_sid)
+        player.last_update = update
 
 def error_check(result: Dict) -> Dict:
     '''Aborts with 400 if result is error'''
@@ -93,8 +76,8 @@ def error400(err):
 def enable_cors(response):
     '''Verifies server responds to all requests'''
     
-    
-    response.headers['Access-Control-Allow-Origin'] = CLIENT_ORIGIN
+    if CLIENT_ORIGIN:
+        response.headers['Access-Control-Allow-Origin'] = CLIENT_ORIGIN
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token, user-agent'
@@ -148,7 +131,8 @@ def login() -> Dict:
     game.add_player(player)
     clients[player.token] = game_id
     response = make_response(jsonify(util.success('Successfully logged into game')))
-    response.set_cookie('tbg_token', player.token, max_age=400)
+    response.set_cookie('tbg_token', player.token, max_age=6000)
+    update_client(game)
     return response
 
 @app.route('/api/create', methods=['POST'])
@@ -172,7 +156,7 @@ def create_new_game():
     games[game.id] = game
     clients[player.token] = game.id
     response = make_response(jsonify({'game': game.id}))
-    response.set_cookie('tbg_token', player.token, max_age=400)
+    response.set_cookie('tbg_token', player.token, max_age=6000)
     return response
 
 @app.route('/api/game/<game_id>', methods=['GET'])
@@ -190,6 +174,7 @@ def start_game(game: Game, player: Player) -> Dict:
     '''Starts requested game if user is host'''
     result: Dict = game.start_game(player)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 
@@ -204,6 +189,7 @@ def play_card_from_hand(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result: Dict = game.hand_to_field(player, field_index)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 
@@ -219,6 +205,7 @@ def play_card_from_market(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result: Dict = game.market_to_field(player, field_index, card_id)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 @app.route('/api/game/<game_id>/play/pending', methods=['POST'])
@@ -233,6 +220,7 @@ def play_card_from_pending(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result: Dict = game.pending_to_field(player, field_index, card_id)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 
@@ -242,6 +230,7 @@ def draw_for_market(game: Game, player: Player) -> Dict:
     '''Draws two cards and places them in market'''
     result: Dict = game.deck_to_market(player)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 
@@ -251,6 +240,7 @@ def draw_for_hand(game: Game, player: Player) -> Dict:
     '''Draws three cards and places them in players hand'''
     result: Dict = game.deck_to_hand(player)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 @app.route('/api/game/<game_id>/trade/create', methods=['POST'])
@@ -267,6 +257,7 @@ def create_trade(game: Game, player: Player) -> Dict:
 
     result = game.create_trade(player, other_player_name, card_ids, wants)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 @app.route('/api/game/<game_id>/trade/accept', methods=['POST'])
@@ -281,6 +272,7 @@ def accept_trade(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result = game.accept_trade(player, trade_id, card_ids)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 @app.route('/api/game/<game_id>/trade/reject', methods=['POST'])
@@ -294,8 +286,8 @@ def reject_trade(game: Game, player: Player) -> Dict:
         abort(400, util.error('Incorrect JSON data'))
     result = game.reject_trade(player, trade_id)
     error_check(result)
+    update_client(game)
     return jsonify(result)
 
 print("Server starting...")
-server = WSGIServer(('0.0.0.0', 8080), app, handler_class=WebSocketHandler)
-server.serve_forever()
+socketio.run(app, '0.0.0.0', 8080)
