@@ -131,7 +131,7 @@ def login() -> Dict:
     game.add_player(player)
     clients[player.token] = game_id
     response = make_response(jsonify(util.success('Successfully logged into game')))
-    response.set_cookie('tbg_token', player.token, max_age=6000)
+    response.set_cookie('tbg_token', player.token, max_age=6000, domain="")
     update_client(game)
     return response
 
