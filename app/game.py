@@ -200,6 +200,16 @@ class Game:
         self.trades = [trade for trade in self.trades if trade.id != trade_id]
         return util.success("Trade successfully rejected")
 
+    def buy_field(self, player: Player):
+        '''Buy third field for 3 coins'''
+        if player.coins < 3:
+            return util.error("Not enough coins to purchase third field")
+        if player.fields[2].enabled:
+            return util.error("Field already purchased")
+        player.coins -= 3
+        player.fields[2].enabled = True
+        return util.success("Successfully purchased third field")
+        
     def go_next_stage(self) -> None:
         self.stage_index = (self.stage_index + 1) % len(constants.STAGES)
         current_player = self.players[self.current_player_index]
@@ -223,7 +233,7 @@ class Game:
         '''Adds coins to player and clears field'''
         value: int = field.get_trade_value()
         player.coins += value
-        field.cards = field.cards[:-value]
+        field.cards = field.cards[value:]
         for card in field.cards:
             self.discards.cards.append(card)
         field.cards = []

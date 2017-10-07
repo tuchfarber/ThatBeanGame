@@ -289,5 +289,14 @@ def reject_trade(game: Game, player: Player) -> Dict:
     update_client(game)
     return jsonify(result)
 
+@app.route('/api/game/<game_id>/buy', methods=['POST'])
+@check_valid_request
+def buy_field(game: Game, player: Player) -> Dict:
+    '''Buys third field for 3 coins'''
+    result = game.buy_field(player)
+    error_check(result)
+    update_client(game)
+    return jsonify(result)
+
 print("Server starting...")
 socketio.run(app, '0.0.0.0', 8080)

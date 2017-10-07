@@ -19,10 +19,11 @@ class Card:
         return {
             "name": self.name,
             "count": self.count,
-            "values": self.values,
+            "values": [val if val != 24 else 0 for val in self.values],
             "img": self.img_src,
             "id": self.id
         }
+    
 
 
 class Deck:
