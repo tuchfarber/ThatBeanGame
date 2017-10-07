@@ -64,6 +64,23 @@ class Game:
             player.is_host = True
         self.players.append(player)
 
+    def leave_game(self, player: Player) -> Dict[str, str]:
+        '''Removes player from game and progresses game if it's that players turn'''
+        current_player = self.players[self.current_player_index]
+        current_stage = self.stage_index
+        if len(self.players) == 1:
+            self.status = "Completed"
+            return util.success("Successfully ended game")
+        if player == current_player:
+            next_player = self.players[(self.current_player_index + 1) % len(self.players)]
+            self.players = [_player for _player in self.players if _player != player]
+            self.current_player_index = self.players.index(next_player)
+            self.stage_index = 0
+        else:
+            self.players = [_player for _player in self.players if _player != player]
+            self.current_player_index = self.players.index(current_player)
+        return util.success("Successfully left game")
+
     def is_full(self) -> bool:
         '''Checks if max players have been reached'''
         if len(self.players) < constants.MAX_PLAYERS:
@@ -93,7 +110,8 @@ class Game:
             'stage': constants.STAGES[self.stage_index],
             'market': self.market_to_dict(),
             'trades': [trade.to_public_dict() for trade in self.trades],
-            'game_type': self.game_type
+            'game_type': self.game_type,
+            'winner': self.winner
         }
 
     @check_stage((1, 2))
