@@ -1,6 +1,8 @@
 # ThatBeanGame
 ## A web based version of my favourite bean farming game
 
+### NOTE: This repo only contains the server side of the code. The client is completed detached from the server and resides in it's own repo here: [https://github.com/tuchfarber/ThatBeanGame-Client](https://github.com/tuchfarber/ThatBeanGame-Client)
+
 **To run the game server:**
 1. `make env`
 2. `source venv/bin/activate`
