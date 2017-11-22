@@ -1,7 +1,7 @@
 # ThatBeanGame
 ## A web based version of my favourite bean farming game
 
-### NOTE: This repo only contains the server side of the code. The client is completed detached from the server and resides in it's own repo here: [https://github.com/tuchfarber/ThatBeanGame-Client](https://github.com/tuchfarber/ThatBeanGame-Client)
+**NOTICE**: This repo only contains the server side of the code. The client is completed detached from the server and resides in it's own repo here: [https://github.com/tuchfarber/ThatBeanGame-Client](https://github.com/tuchfarber/ThatBeanGame-Client)
 
 **To run the game server:**
 1. `make env`
@@ -16,15 +16,17 @@ This game is also being automatically built on Docker Hub. To run the docker con
 
 `docker run -d -p 8080:8080 -e TBG_CLIENT_ORIGIN='http://example.com:9000' tuchfarber/thatbeangame`
 
-*Current status*: partially working
+*Current status*: mostly working
 
 ## Documentation
 Documentation (including API) can be found at: http://thatbeangame.readthedocs.io
 
 The full game can be played currently, assuming the networking is done correctly. 
 
-### TODO
-* Implement audio chat in app
+### Wishlist
+* Implement audio or video chat in app
 * Game cleanup after game ends
 * Game over page
 * Make more documentation or automation on the networking side.
+* Make the UX way better
+* Add a public game listing that users can choose from if they don't have a group of their own.
