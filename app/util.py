@@ -1,5 +1,7 @@
 from typing import List, Dict
 
+import signal
+import sys
 
 def shrink(lst: List):
     if lst:
@@ -23,3 +25,14 @@ def error(message: str) -> Dict[str, str]:
 
 def success(message: str) -> Dict[str, str]:
     return {'success': message}
+
+
+def interrupt_handler(signum, frame):
+  ''' Catch OS interrupts and handle them accordingly '''
+  print('\nCaught signal {}...'.format(signum))
+  sys.exit(0)
+
+
+def register_signal_handler():
+  ''' Register signal handler to catch interrupt codes '''
+  signal.signal(signal.SIGINT, interrupt_handler)

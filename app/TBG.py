@@ -16,6 +16,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
+# Handle OS interrupts
+util.register_signal_handler()
+
 games: Dict[str, Game] = {}
 clients: Dict[str, str] = {}
 
@@ -79,7 +82,7 @@ def error400(err):
 @app.after_request
 def enable_cors(response):
     '''Verifies server responds to all requests'''
-    
+
     if CLIENT_ORIGIN:
         response.headers['Access-Control-Allow-Origin'] = CLIENT_ORIGIN
     response.headers['Access-Control-Allow-Credentials'] = 'true'
@@ -147,7 +150,7 @@ def create_new_game():
         player: Player = Player(post_data['name'])
     except KeyError:
         abort(400, util.error('Name not supplied'))
-    
+
     try:
         game_type: str = post_data['game_type']
     except KeyError:
