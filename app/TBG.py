@@ -22,6 +22,10 @@ clients: Dict[str, str] = {}
 if 'TBG_CLIENT_ORIGIN' in os.environ:
     CLIENT_ORIGIN = os.environ['TBG_CLIENT_ORIGIN']
 
+# Construct host and port from environment variables
+HOST = os.getenv('TBG_HOST', '0.0.0.0')
+PORT = os.getenv('TBG_PORT', 8080)
+
 @socketio.on('login')
 def on_login(login_info):
     try:
@@ -308,5 +312,5 @@ def buy_field(game: Game, player: Player) -> Dict:
     update_client(game)
     return jsonify(result)
 
-print("Server starting...")
-socketio.run(app, '0.0.0.0', 8080)
+print("Server starting {}:{}".format(HOST, PORT))
+socketio.run(app, HOST, PORT)
